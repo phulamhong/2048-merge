@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-27T10:45:00Z",
-  "current_focus": "Nhánh flutter-app: song song với economy/gamification (task flutter-app-8), vừa làm riêng 1 đợt sửa theo 5 yêu cầu UX user báo trực tiếp (không qua AskUserQuestion): (1) animation trượt/gộp/tách/bay-thu-hoạch/spawn thay vì teleport, (2) mục tiêu hiển thị icon tile thay vì text, (3) tự động thu hoạch tile khớp mục tiêu thay vì bắt bấm tay, (4) màn hình mục tiêu trước màn + màn hình kết quả sau màn, (5) màn hình Home/bản đồ chương thay vì vào thẳng màn đang chơi dở. Xong cả 5, chi tiết ở task flutter-app-10. CHƯA commit. Xác nhận lại giới hạn môi trường: KHÔNG dùng cliclick+screencapture để tự lái app trên desktop này được nữa — máy có nhiều cửa sổ/phiên khác (VS Code, Notes, phiên Claude Code khác) đè lên nhau, toạ độ click không đoán được cửa sổ nào nhận, đã lỡ click nhầm sang cửa sổ VS Code của project 'mathvn-native' và app Notes khi thử (không gõ phím, không có hành động phá hoại, nhưng phải dừng ngay). Cùng kết luận với ghi chú trước đó của phiên economy/gamification.",
+  "updated_at": "2026-09-27T15:35:00Z",
+  "current_focus": "Nhánh flutter-app giờ có 2 phiên Claude Code chạy song song trên cùng working tree (phiên này: economy/gamification qua AskUserQuestion; phiên kia: 5 sửa UX theo yêu cầu trực tiếp — animation, objective icon, auto-harvest, intro/result dialog, HomeScreen). User gõ 'commit' vào đúng lúc code đang vỡ compile dở (GameSession._autoHarvestMatches chưa định nghĩa) — đã hỏi lại user, chọn chờ thay vì tự đoán ý phiên kia. Chờ ~ít phút, phiên kia hoàn tất VÀ TỰ COMMIT xong cả hai phần: 14a24a8 (economy — của phiên này) và e12842e (UX — của phiên kia), trên cùng nhánh flutter-app. Tự kiểm tra lại: `flutter analyze` sạch, 58 test pass, `flutter build macos --debug` thành công — commit hợp lệ, không cần commit lại. Việc 'commit' user yêu cầu coi như xong (do phiên kia thực hiện). Bài học: khi nhiều phiên cùng sửa 1 working tree, luôn `git log`/`flutter analyze` trước khi tự ý commit hay tự sửa hộ code người khác.",
   "next_id": 11,
   "domains": ["game-design", "flutter-app"],
   "tasks": [
@@ -51,7 +51,14 @@
       "title": "5 sửa UX theo yêu cầu trực tiếp: animation event-driven (move/merge-pop/split-grow/shake/fly-harvest/spawn-in qua Flame Effects), objective icon (ObjectiveIconComponent + ObjectiveChip) thay text, auto-harvest theo match objective trong core (GameSession._autoHarvestMatches, không cần tap), LevelIntroDialog + LevelResultDialog qua GameScreen, HomeScreen (port ChapterMapScene) làm route gốc thay vì vào thẳng FarmMergeGame",
       "domain": "flutter-app",
       "status": "done",
-      "evidence": "flutter analyze sạch, 58 test pass (thêm 3 test auto-harvest mới trong session_test.dart, sửa 1 test cũ 'still allows harvesting...' vì hành vi đổi có chủ đích, widget_test.dart viết lại theo luồng Home→intro→game). flutter build macos --debug thành công. Verify bằng mắt: chụp được Home screen (chapter cards đúng, energy 5/5) và level-intro dialog (đúng icon mục tiêu 🐥 0/2, energy trừ còn 4/5) qua cliclick+screencapture TRƯỚC KHI phải dừng vì lỡ click nhầm cửa sổ khác trên desktop (xem current_focus). CHƯA verify bằng mắt: animation thật khi swipe, fly-to-harvest, LevelResultDialog, vì phải dừng thao tác chuột tự động giữa chừng — cần user tự chạy `flutter run` để xác nhận phần còn lại."
+      "evidence": "Commit e12842e trên nhánh flutter-app. flutter analyze sạch, 58 test pass, flutter build macos --debug thành công (verify lại độc lập bởi phiên economy sau khi merge xong). Verify bằng mắt: chỉ chụp được Home screen + level-intro dialog qua cliclick trước khi dừng vì lỡ click nhầm cửa sổ khác. CHƯA verify bằng mắt: animation thật, fly-to-harvest, LevelResultDialog — cần user tự chạy `flutter run`."
+    },
+    {
+      "id": "flutter-app-9",
+      "title": "Economy Phase 1: energy hồi theo thời gian, gems, 3 booster trả bằng xu (hoàn tác/xáo bàn/+5 lượt), nạp năng lượng bằng gems",
+      "domain": "flutter-app",
+      "status": "done",
+      "evidence": "Commit 14a24a8 trên nhánh flutter-app. 17 test economy/booster pass (gộp trong tổng 58 test sau khi merge với UX). flutter analyze sạch, flutter build macos --debug thành công."
     }
   ],
   "open_questions": [
