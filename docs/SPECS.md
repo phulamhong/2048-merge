@@ -575,6 +575,9 @@ Sau khi thêm, chạy `npm test`: `content.test.ts` sẽ bắt các lỗi tham c
 
 ## 15. Giới hạn hiện tại & lộ trình
 
+> Bản thiết kế mở rộng dài hạn (nhiều Vùng, vật cản, màn nhiều giai đoạn) nằm ở
+> [docs/GAME_DESIGN.md](./GAME_DESIGN.md). Mục dưới đây giữ nguyên làm tóm tắt Phase 2/3 gốc.
+
 ### Khác biệt so với plan ban đầu
 - HUD được vẽ trực tiếp trong `GameScene`, không tách thành `HUDScene` chạy song song.
 - Chưa có Boot/Preload và chưa sinh texture. Đồ hoạ tạm dùng emoji và Graphics vẽ trực tiếp.
