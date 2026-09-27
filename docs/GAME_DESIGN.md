@@ -272,8 +272,144 @@ sau đó băng, cỏ dại, rồi mới tới `stages` (phức tạp hơn vì đ
    khi ra mắt lần đầu?** Đơn giản hơn là làm vĩnh viễn trước, thêm giới hạn thời gian sau nếu cần.
 3. **Có cần thêm tiền tệ cứng (gems) khi bắt đầu tính đến monetize không, hay giữ chỉ 1 loại xu xuyên suốt?**
    Đề xuất giữ 1 loại tới khi có quyết định kinh doanh rõ ràng.
-4. **Unity POC (nhánh `unity-poc`) có kế thừa thiết kế này hay là nhánh thử nghiệm riêng, độc lập với bản
-   web?** Cần chốt trước khi đầu tư thêm vào Unity port.
+4. ~~Unity POC có kế thừa thiết kế này hay là nhánh thử nghiệm riêng?~~ **Đã chốt (2026-09-27):** bỏ hẳn
+   Unity, nhánh `unity-poc` đã xoá. Chuyển hẳn sang Flutter+Flame (nhánh `flutter-app`), chỉ publish store
+   (không web). Thiết kế ở tài liệu này áp dụng cho bản Flutter.
+
+---
+
+## 11. Nội dung chi tiết Vùng 2, Chương 3-5 — sẵn sàng chuyển thành data
+
+Cụ thể hoá §2.1/§4.1/§7 cho đúng 3 chương đã chốt ở `SPECS.md` (Đá → Ch.3 Cơm gà Hội An, Cỏ dại → Ch.4 Bánh
+mì, Băng → Ch.5 Bún chả). Giữ đúng khuôn `ChainDef`/`ChapterDef`/`LevelConfig` hiện có (`src/core/types.ts`) +
+phần schema mới còn thiếu (nêu ở §11.5). Theo đúng nguyên tắc "1 chương = 1 bài học": mỗi chương chỉ dùng
+**một chain chính duy nhất** xuyên suốt 5 màn (như Chương 1), để toàn bộ độ khó tăng thêm đến từ đúng 1 cơ
+chế vật cản mới — không trộn thêm biến thể mode/multi-chain ở đây.
+
+Toàn bộ số `moveLimit`/số lượng vật cản dưới đây là **điểm khởi đầu theo công thức §7**, chưa chạy qua
+`sim/simulate.ts` (bot cần biết xử lý vật cản trước — xem §11.6) — không đưa thẳng vào `levels.ts` khi chưa
+tune.
+
+### 11.1 Chương 3 · "Cơm gà Hội An" (giới thiệu Đá)
+
+**Chain mới `shreddedChicken` (Gà xé)** — lưới 5×5, mode `merge` cả 5 màn.
+
+| Tier | id | Tên | Emoji | Màu (placeholder) |
+|---|---|---|---|---|
+| 1 | raw | Ức gà tươi | 🍗 | `0xffe0c2` |
+| 2 | poached | Gà luộc | 🥘 | `0xffc98b` |
+| 3 | shredded | Gà xé | 🍽️ | `0xf4a259` |
+| 4 | mixed | Đĩa gà trộn | 🥗 | `0xe76f51` |
+| 5 | plate | Cơm gà đầy đủ | 🍛 | `0xbc6c25` |
+
+`ChapterDef`: id `ch3`, tên "Chương 3 · Cơm gà Hội An", recipe `hoianchicken` (verb "Trộn", station 🍽️),
+5 ingredient = đúng 5 tier trên, unlock decor "Xe cơm gà" 🛺.
+
+| Màn | Tên | Objectives | Đá (số·vị trí) | moveLimit* | Ghi chú |
+|---|---|---|---|---|---|
+| 3-1 | Ức gà đầu mùa | t3×2 | 0 | ~16 | Giới thiệu chain, chưa có Đá — chỉ nhá UI tên cơ chế |
+| 3-2 | Đá lấp đường mòn | t3×3 | 1 · (2,2) | ~22 | Đá đầu tiên đặt giữa bàn đúng nguyên tắc §4.1 |
+| 3-3 | Gà trộn đầu tay | t3×2 + t4×1 | 2 · (1,2),(3,2) | ~30 | Cột giữa bị chẹn 2 đầu → ép trượt vòng |
+| 3-4 | Ruộng đá Hội An | t4×2 | 2 · (2,1),(2,3) | ~30 | Đổi trục chẹn (hàng giữa) để không lặp pattern 3-3 |
+| 3-5 | Cơm gà Hội An (Boss) | t5×1 + t3×2 | 4 · (1,1),(1,3),(3,1),(3,3) | ~46 | `boss:true`, 4 góc trong tạo ô "an toàn" hình chữ thập ở giữa |
+
+\* Công thức: `Σ(target×2^(tier−1)) × 1.5~1.8 + rockPenalty(≈2/ô đá)` (§7).
+
+### 11.2 Chương 4 · "Bánh mì" (giới thiệu Cỏ dại)
+
+**Chain mới `wheat` (Lúa mì)** — lưới 5×5, mode `merge`.
+
+| Tier | id | Tên | Emoji | Màu |
+|---|---|---|---|---|
+| 1 | grain | Hạt lúa mì | 🌾 | `0xf1e3c6` |
+| 2 | dough | Bột mì | 🫓 | `0xe9c9a3` |
+| 3 | crust | Vỏ bánh mì | 🥐 | `0xd8a973` |
+| 4 | loaf | Ổ bánh mì | 🥖 | `0xc08552` |
+| 5 | banhmi | Bánh mì thịt đầy đủ | 🥪 | `0x8a5a34` |
+
+`ChapterDef`: id `ch4`, recipe `banhmi` (verb "Kẹp", station 🥪), unlock decor "Xe bánh mì" 🥖.
+
+Cỏ dại: mỗi ô có toạ độ gốc, sau mỗi `spreadEvery` lượt lan sang 1 ô trống liền kề (thứ tự cố định
+ưu, tiên phải→dưới→trái→trên, để test được như đề xuất §4.1). Dọn bằng gộp/tách **tại đúng ô đang có cỏ**.
+
+| Màn | Tên | Objectives | Cỏ dại (gốc·spreadEvery) | moveLimit* | Ghi chú |
+|---|---|---|---|---|---|
+| 4-1 | Gieo lúa mì | t3×2 | 0 | ~18 | Giới thiệu chain, chưa có cỏ |
+| 4-2 | Cỏ dại ven đường | t3×3 | 1 · (0,0) · N=4 | ~26 | Cỏ mọc góc, ít cản đường ban đầu |
+| 4-3 | Bột mì đầu lò | t3×2 + t4×1 | 2 · (0,0),(4,4) · N=4 | ~34 | Cỏ mọc chéo 2 góc đối nhau |
+| 4-4 | Ruộng cỏ um tùm | t4×2 | 2 · (0,4),(4,0) · N=3 | ~34 | Lan nhanh hơn (N=3) thay vì thêm số lượng |
+| 4-5 | Bánh mì Sài Gòn (Boss) | t5×1 + t3×2 | 3 · (0,0),(4,4),(2,2) · N=3 | ~50 | `boss:true`, phủ cả 2 góc chéo + tâm |
+
+\* Cùng công thức §7, `weedPenalty ≈ 1 ô trống/N lượt` (§7).
+
+### 11.3 Chương 5 · "Bún chả" (giới thiệu Băng, chốt Vùng 2)
+
+**Chain mới `pork` (Heo)** — lưới 5×5, mode `merge`.
+
+| Tier | id | Tên | Emoji | Màu |
+|---|---|---|---|---|
+| 1 | belly | Ba chỉ heo | 🐖 | `0xffd9c4` |
+| 2 | paste | Chả sống | 🧈 | `0xf0b48c` |
+| 3 | ball | Chả viên | 🍡 | `0xd9895f` |
+| 4 | grilled | Chả nướng | 🍢 | `0xb5622f` |
+| 5 | bowl | Bún chả đầy đủ | 🍜 | `0x8a3f1e` |
+
+`ChapterDef`: id `ch5`, recipe `buncha` (verb "Nướng", station 🍢), unlock decor "Quán bún chả" 🍜.
+
+Băng: đặt tại 1 ô cụ thể ngay từ đầu màn (chồng lên `initialTiles` nếu ô đó có Tile, hoặc "chờ" Tile đầu
+tiên trôi tới rồi đóng băng luôn Tile đó). Tile trên ô băng đứng yên khi vuốt nhưng vẫn được gộp nếu ô kề
+trượt tới nó; băng tan ngay sau 1 phép gộp thành công tại ô đó.
+
+| Màn | Tên | Objectives | Băng (vị trí) | moveLimit* | Ghi chú |
+|---|---|---|---|---|---|
+| 5-1 | Heo nhà nuôi | t3×2 | 0 | ~18 | Giới thiệu chain, chưa có băng |
+| 5-2 | Sương giá sớm mai | t3×3 | 1 · (2,2) | ~24 | Băng đầu tiên, đặt giữa bàn |
+| 5-3 | Chả viên đầu tay | t3×2 + t4×1 | 2 · (1,1),(3,3) | ~32 | 2 ô băng chéo nhau |
+| 5-4 | Đêm đông lạnh giá | t4×2 | 2 · (1,3),(3,1) | ~32 | Đổi trục chéo còn lại |
+| 5-5 | Bún chả Hà Nội (Đại boss Vùng 2) | t5×1 + t4×1 + t3×1 | **tổng hợp:** 2 Đá (1,1)(3,3) + 1 Cỏ dại (2,2)·N=3 + 2 Băng (1,3)(3,1) | ~58 | `boss:true` — màn "tổng ôn" cuối Vùng dùng cả 3 vật cản đã học, đúng ngoại lệ §4.1 mục 3 |
+
+\* `icePenalty` chưa có công thức riêng trong §7 — tạm cộng như `rockPenalty` (ô băng cũng loại bỏ tạm thời
+1 ô khỏi diện tích khả dụng cho tới khi gộp), cần bot sim xác nhận lại.
+
+### 11.4 Cấu trúc Vùng (World) cần thêm
+
+Chưa có tầng Vùng trong data (`ChapterDef` hiện không có trường world). Đề xuất thêm file `worlds.ts`:
+
+```ts
+export interface WorldDef {
+  id: string;
+  name: string;
+  chapterIds: string[];
+}
+export const WORLDS: WorldDef[] = [
+  { id: 'world1', name: 'Vùng 1 · Trại nhỏ', chapterIds: ['ch1', 'ch2'] },
+  { id: 'world2', name: 'Vùng 2 · Miền Trung', chapterIds: ['ch3', 'ch4', 'ch5'] },
+];
+```
+
+Quy tắc mở khoá §2.2 ("quá nửa số chương Vùng trước xong"): Vùng 1 chỉ có 2 chương nên quá nửa = cả 2 —
+Vùng 2 mở đúng lúc người chơi nấu xong Tô phở bò (ch2), không đổi hành vi hiện tại.
+
+### 11.5 Schema còn thiếu (đụng core, khác việc chỉ thêm data)
+
+| Trường mới | Ở đâu | Việc cần |
+|---|---|---|
+| `ObstacleDef { type: 'rock' \| 'weed' \| 'ice'; row: number; col: number; spreadEvery?: number }` | `core/types.ts` | Kiểu dữ liệu obstacle |
+| `initialObstacles?: ObstacleDef[]` | `LevelConfig` | Gắn obstacle vào màn, đúng như bảng trên |
+| Board biết ô "rock" chặn line, `resolveLine` dừng tại đó | `core/board.ts`, `core/resolve_line.ts` | Đá |
+| State cỏ dại (đếm lượt, vị trí lan) + state băng (đã tan chưa) | `core/game_session.ts` | Cỏ dại, Băng |
+| `GameEvent` thêm `weedSpread`, `iceMelt` | `core/types.ts` | UI phản hồi khi vật cản đổi trạng thái |
+
+Đúng thứ tự implement đã đề xuất ở §8: **Đá trước** (đơn giản nhất), rồi Băng, rồi Cỏ dại.
+
+### 11.6 Việc cần làm trước khi đưa số liệu trên vào code thật
+
+1. `sim/simulate.ts`: bot tham lam cần hiểu ô đá là bất hợp lệ khi tính nước đi, và có state riêng cho
+   cỏ/băng (đúng như đã ghi ở §7) — **chưa làm được thì không tune được `moveLimit` ở trên, chỉ là số đoán**.
+2. Sau khi bot chạy được, lặp: sửa `moveLimit`/vị trí vật cản → `npm run sim` → so tỉ lệ thắng bot với mục
+   tiêu Vùng 2 (~75-80% màn thường, ~65-70% màn boss, theo §7).
+3. Asset thật: emoji/màu ở trên là placeholder giống 6 chain hiện có — thay khi có art thật (đã ghi trong
+   task `flutter-app-5`).
 
 ---
 
