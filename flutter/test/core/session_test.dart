@@ -218,7 +218,7 @@ void main() {
       expect(s.loseReason, LoseReason.outOfMoves);
     });
 
-    test('still allows harvesting a needed tile at zero moves', () {
+    test('auto-harvests a needed tile immediately, even at zero moves', () {
       final s = sessionWith(
         [
           [1, 1, 0, 0],
@@ -226,10 +226,54 @@ void main() {
         moveLimit: 1,
         objectives: const [ObjectiveDef(tier: 2, target: 1)],
       );
-      s.swipe(Direction.left);
-      expect(s.status, SessionStatus.playing);
-      s.tap(0, 0);
+      final events = s.swipe(Direction.left);
+      expect(events.whereType<HarvestEvent>().any((e) => e.auto && e.objectiveIndex == 0), true);
+      expect(s.board.tiles(), isEmpty);
       expect(s.status, SessionStatus.won);
+    });
+  });
+
+  group('auto-harvest on match', () {
+    test('harvests a freshly merged tile that matches an objective, without a tap', () {
+      final s = sessionWith(
+        [
+          [2, 2, 0, 0],
+        ],
+        objectives: const [ObjectiveDef(tier: 3, target: 1)],
+      );
+      final events = s.swipe(Direction.left);
+      final harvest = events.whereType<HarvestEvent>().single;
+      expect(harvest.auto, true);
+      expect(harvest.objectiveIndex, 0);
+      expect(s.board.tiles(), isEmpty);
+      expect(s.status, SessionStatus.won);
+    });
+
+    test('harvests freshly split tiles matching a tier-1 objective, without a tap', () {
+      final s = sessionWith(
+        [
+          [2, 0],
+          [0, 0],
+        ],
+        mode: LevelMode.split,
+        objectives: const [ObjectiveDef(tier: 1, target: 2)],
+      );
+      final events = s.tap(0, 0);
+      expect(events.whereType<HarvestEvent>().where((e) => e.auto).length, 2);
+      expect(s.board.tiles(), isEmpty);
+      expect(s.status, SessionStatus.won);
+    });
+
+    test('does not auto-harvest a tile that does not match any unfinished objective', () {
+      final s = sessionWith(
+        [
+          [1, 1, 0, 0],
+        ],
+        mode: LevelMode.split,
+        objectives: const [ObjectiveDef(tier: 3, target: 1)],
+      );
+      s.swipe(Direction.left);
+      expect(tiersGrid(s)[0], [2, 0, 0, 0]);
     });
   });
 

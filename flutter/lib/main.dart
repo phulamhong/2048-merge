@@ -1,11 +1,10 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import 'core/save_manager.dart';
 import 'core/shared_prefs_storage.dart';
 import 'data/chapters.dart' as chapter_data;
 import 'data/levels.dart' as level_data;
-import 'game/farm_merge_game.dart';
+import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,10 +23,7 @@ class FarmMergeApp extends StatelessWidget {
       title: 'Nông Trại & Bếp Việt',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF588157)),
-      home: Scaffold(
-        backgroundColor: const Color(0xFF2E3A23),
-        body: GameWidget(game: FarmMergeGame(saveManager: saveManager)),
-      ),
+      home: HomeScreen(saveManager: saveManager),
     );
   }
 }
