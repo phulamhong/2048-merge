@@ -1,7 +1,7 @@
 {
-  "updated_at": "2026-09-27T15:35:00Z",
-  "current_focus": "Nhánh flutter-app giờ có 2 phiên Claude Code chạy song song trên cùng working tree (phiên này: economy/gamification qua AskUserQuestion; phiên kia: 5 sửa UX theo yêu cầu trực tiếp — animation, objective icon, auto-harvest, intro/result dialog, HomeScreen). User gõ 'commit' vào đúng lúc code đang vỡ compile dở (GameSession._autoHarvestMatches chưa định nghĩa) — đã hỏi lại user, chọn chờ thay vì tự đoán ý phiên kia. Chờ ~ít phút, phiên kia hoàn tất VÀ TỰ COMMIT xong cả hai phần: 14a24a8 (economy — của phiên này) và e12842e (UX — của phiên kia), trên cùng nhánh flutter-app. Tự kiểm tra lại: `flutter analyze` sạch, 58 test pass, `flutter build macos --debug` thành công — commit hợp lệ, không cần commit lại. Việc 'commit' user yêu cầu coi như xong (do phiên kia thực hiện). Bài học: khi nhiều phiên cùng sửa 1 working tree, luôn `git log`/`flutter analyze` trước khi tự ý commit hay tự sửa hộ code người khác.",
-  "next_id": 11,
+  "updated_at": "2026-09-27T15:55:00Z",
+  "current_focus": "Nhánh flutter-app: phiên thứ 3 (song song với economy-session ở trên) vừa xử lý 6 bug/yêu cầu user báo trực tiếp kèm 7 ảnh chụp màn hình thật trên điện thoại (feedback #1289-1294, xem flutter-app-11) — đây chính là các file mà economy-session đã note 'phiên kia đang sửa, KHÔNG đụng vào': levels.dart, farm_merge_game.dart, main.dart, home_screen.dart, level_intro_dialog.dart, level_result_dialog.dart, widget_test.dart. Đã xong cả 6, CHƯA commit (chờ user xác nhận, theo quy tắc chỉ commit khi được yêu cầu). Cũng phát hiện: bug 'về trang chủ vẫn khoá' rất có thể là do HomeScreen không refresh khi quay lại qua chuỗi pushReplacement nhiều màn liên tiếp (giả thuyết mạnh về mặt logic — suy từ số liệu energy giảm 2 điểm giữa 2 ảnh chụp chứng tỏ màn 1-4 THẬT SỰ đã được thắng — nhưng chưa tự viết được 1 test tái hiện đúng bug trên code cũ để xác nhận 100% cơ chế; đã fix bằng RouteObserver/RouteAware (mẫu chuẩn của Flutter cho đúng lớp bug này) nên an toàn để giữ dù chưa chắc chắn tuyệt đối đây là root cause duy nhất.",
+  "next_id": 12,
   "domains": ["game-design", "flutter-app"],
   "tasks": [
     {
@@ -59,6 +59,13 @@
       "domain": "flutter-app",
       "status": "done",
       "evidence": "Commit 14a24a8 trên nhánh flutter-app. 17 test economy/booster pass (gộp trong tổng 58 test sau khi merge với UX). flutter analyze sạch, flutter build macos --debug thành công."
+    },
+    {
+      "id": "flutter-app-11",
+      "title": "6 sửa từ feedback #1289-1294 (ảnh chụp điện thoại thật): tên màn chỉ còn số (bỏ '· tên màn' ở LevelIntroDialog + HUD title), sửa hint text 2 màn 1-1/1-3 còn mô tả cơ chế tự bấm thu hoạch cũ, fix tràn text trong màn chơi (booster bar + hint giờ wrap qua TextBoxComponent thay vì TextComponent 1 dòng), bỏ tên nguyên liệu ở LevelResultDialog (chỉ còn emoji), bỏ badge '👑 MÀN BOSS' ở LevelIntroDialog, fix bug về trang chủ vẫn hiện khoá sau khi qua nhiều màn (HomeScreen giờ dùng RouteObserver/RouteAware.didPopNext thay vì chỉ await Navigator.push đầu tiên)",
+      "domain": "flutter-app",
+      "status": "done",
+      "evidence": "flutter analyze sạch, 59 test pass (thêm 1 test mới cho luồng pushReplacement nhiều màn rồi popUntil về Home trong widget_test.dart — test này PASS trên cả code cũ lẫn code mới, tức chưa tự chứng minh được đây là root cause chính xác của bug lock, chỉ xác nhận RouteObserver là cách làm đúng/an toàn theo chuẩn Flutter). flutter build macos --debug thành công. CHƯA commit (đợi user duyệt). CHƯA verify bằng mắt trên điện thoại thật — cần user tự flutter run và xác nhận lại đúng 6 điểm, đặc biệt bug lock vì cơ chế gốc chưa chắc chắn 100%."
     }
   ],
   "open_questions": [

@@ -24,11 +24,8 @@ class LevelIntroDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (level.boss)
-              const Text('👑 MÀN BOSS', style: TextStyle(color: Color(0xFFE9C46A), fontWeight: FontWeight.bold, letterSpacing: 1)),
-            const SizedBox(height: 6),
             Text(
-              '${level.id} · ${level.name}',
+              level.id,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
             ),

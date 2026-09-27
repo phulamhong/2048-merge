@@ -4,6 +4,7 @@ import '../core/save_manager.dart';
 import '../core/types.dart';
 import '../data/chapters.dart' as chapter_data;
 import '../data/levels.dart' as level_data;
+import '../main.dart' show routeObserver;
 import '../widgets/ui_format.dart';
 import 'game_screen.dart';
 
@@ -25,12 +26,35 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   SaveManager get _save => widget.saveManager;
 
-  Future<void> _openLevel(String levelId) async {
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => GameScreen(saveManager: _save, levelId: levelId)));
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of<void>(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Called whenever a pushed route above this one is popped and Home
+  /// becomes visible again. Refreshes unconditionally rather than relying on
+  /// awaiting the original `Navigator.push` future, which only tracks the
+  /// single route it pushed — fragile once "Màn tiếp" replaces that route
+  /// with the next level's (chained several levels deep via
+  /// `pushReplacement`), the reported symptom being stars/unlocks for
+  /// levels played after the first "Màn tiếp" not showing up back home.
+  @override
+  void didPopNext() {
     if (mounted) setState(() {});
+  }
+
+  void _openLevel(String levelId) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => GameScreen(saveManager: _save, levelId: levelId)));
   }
 
   void _cook(String chapterId) {

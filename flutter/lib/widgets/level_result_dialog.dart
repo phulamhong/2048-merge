@@ -52,7 +52,7 @@ class LevelResultDialog extends StatelessWidget {
       Text('Còn dư ${session.movesLeft} lượt', style: const TextStyle(color: Colors.white70, fontSize: 14)),
       if (firstClear && ing != null) ...[
         const SizedBox(height: 14),
-        Text('Nhận nguyên liệu: ${ing.emoji} ${ing.name}', style: const TextStyle(color: Colors.white, fontSize: 15)),
+        Text('Nhận nguyên liệu: ${ing.emoji}', style: const TextStyle(color: Colors.white, fontSize: 15)),
       ],
       const SizedBox(height: 8),
       Text('+${result?.coinsEarned ?? 0} 🪙', style: const TextStyle(color: Color(0xFFE9C46A), fontSize: 16, fontWeight: FontWeight.bold)),

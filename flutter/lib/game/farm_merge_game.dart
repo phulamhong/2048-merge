@@ -20,6 +20,12 @@ const extraMovesCost = 25;
 const extraMovesAmount = 5;
 const energyRefillGemCost = 20;
 
+/// Stand-in for "this wrapping label has nothing to show right now". A truly
+/// empty string makes `TextBoxComponent` lay out zero lines, which computes a
+/// zero-height image and crashes `toImageSafe` ("Invalid image dimensions");
+/// a lone space keeps the box a valid, if invisible, one-line box.
+const _blank = ' ';
+
 class _Button {
   Rect rect;
   final VoidCallback onTap;
@@ -43,14 +49,20 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
   static const double _objectiveIconSize = 44;
   static const double _objectiveGap = 18;
   static const double _gridTop = 210;
+  static const double _boosterMargin = 16;
+  static const double _boosterRowY = 148;
+  static const double _boosterRowHeight = 40;
 
   late GameSession session;
   late GridComponent gridComponent;
   late TextComponent _titleText;
   late TextComponent _movesText;
   late TextComponent _economyText;
-  late TextComponent _boosterBarText;
-  late TextComponent _hintText;
+  late TextBoxComponent _energyRefillLabel;
+  late TextBoxComponent _undoLabel;
+  late TextBoxComponent _shuffleLabel;
+  late TextBoxComponent _extraMovesLabel;
+  late TextBoxComponent _hintText;
   final _objectiveIcons = <ObjectiveIconComponent>[];
 
   bool _energyBlocked = false;
@@ -77,9 +89,21 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     _titleText = TextComponent(position: Vector2(16, 12), textRenderer: _headerStyle());
     _movesText = TextComponent(position: Vector2(16, 42), textRenderer: _bodyStyle());
     _economyText = TextComponent(position: Vector2(16, 64), textRenderer: _bodyStyle(color: Colors.amber.shade200));
-    _boosterBarText = TextComponent(position: Vector2(16, 160), textRenderer: _bodyStyle(color: Colors.lightGreenAccent));
-    _hintText = TextComponent(textRenderer: _bodyStyle(color: Colors.white54));
-    addAll([_titleText, _movesText, _economyText, _boosterBarText, _hintText]);
+    _energyRefillLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 13);
+    _undoLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
+    _shuffleLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
+    _extraMovesLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
+    _hintText = _wrappingLabel(color: Colors.white54, fontSize: 13);
+    addAll([
+      _titleText,
+      _movesText,
+      _economyText,
+      _energyRefillLabel,
+      _undoLabel,
+      _shuffleLabel,
+      _extraMovesLabel,
+      _hintText,
+    ]);
 
     for (final o in level.objectives) {
       final icon = ObjectiveIconComponent(
@@ -102,7 +126,15 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     if (isLoaded) _layout();
   }
 
+  /// Smallest game width worth laying out for — below this, `size.x` is
+  /// either genuinely zero (a Flame `onGameResize` fired before the widget
+  /// has real constraints, e.g. in tests) or too small for the 3 booster
+  /// columns to each get a valid (positive) max text width.
+  static const double _minLayoutWidth = 200;
+
   void _layout() {
+    if (size.x < _minLayoutWidth) return;
+
     gridComponent.position = Vector2((size.x - gridComponent.size.x) / 2, _gridTop);
 
     final n = _objectiveIcons.length;
@@ -113,7 +145,22 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
       x += _objectiveIconSize + _objectiveGap;
     }
 
+    final hintMaxWidth = size.x - 2 * _boosterMargin;
     _hintText.position = Vector2(size.x / 2, gridComponent.position.y + gridComponent.size.y + 20);
+    _hintText.boxConfig = _hintText.boxConfig.copyWith(maxWidth: hintMaxWidth);
+
+    final rowWidth = size.x - 2 * _boosterMargin;
+    final colW = rowWidth / 3;
+    _energyRefillLabel.position = Vector2(size.x / 2, _boosterRowY);
+    _energyRefillLabel.boxConfig = _energyRefillLabel.boxConfig.copyWith(maxWidth: rowWidth);
+    _undoLabel.position = Vector2(_boosterMargin + colW * 0.5, _boosterRowY);
+    _undoLabel.boxConfig = _undoLabel.boxConfig.copyWith(maxWidth: colW - 8);
+    _shuffleLabel.position = Vector2(_boosterMargin + colW * 1.5, _boosterRowY);
+    _shuffleLabel.boxConfig = _shuffleLabel.boxConfig.copyWith(maxWidth: colW - 8);
+    _extraMovesLabel.position = Vector2(_boosterMargin + colW * 2.5, _boosterRowY);
+    _extraMovesLabel.boxConfig = _extraMovesLabel.boxConfig.copyWith(maxWidth: colW - 8);
+
+    _rebuildBoosterButtons();
   }
 
   // --- Input -----------------------------------------------------------
@@ -252,37 +299,62 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
 
   void _refreshHud() {
     final level = session.level;
-    _titleText.text = '${level.id} · ${level.name}';
+    _titleText.text = level.id;
     _movesText.text = 'Lượt còn: ${session.movesLeft}/${level.moveLimit}   Xu: ${session.coins}';
     _economyText.text = '⚡ ${saveManager.energy}/${saveManager.energyMax}   💎 ${saveManager.data.gems}';
-    _hintText.text = level.hint ?? '';
+    _hintText.text = level.hint ?? _blank;
 
     for (var i = 0; i < _objectiveIcons.length; i++) {
       _objectiveIcons[i].updateProgress(session.tracker.progress[i]);
     }
 
     if (_energyBlocked) {
-      _boosterBarText.text = 'Hết năng lượng — chạm đây để nạp ($energyRefillGemCost 💎)';
-      _buttons
-        ..clear()
-        ..add(_Button(_textRect(_boosterBarText), _refillEnergy));
+      _energyRefillLabel.text = 'Hết năng lượng — chạm đây để nạp ($energyRefillGemCost 💎)';
+      _undoLabel.text = _blank;
+      _shuffleLabel.text = _blank;
+      _extraMovesLabel.text = _blank;
     } else {
-      _boosterBarText.text =
-          '↩ Hoàn tác ($undoCost xu)   🔀 Xáo bàn ($shuffleCost xu)   ➕ $extraMovesAmount lượt ($extraMovesCost xu)';
-      final rect = _textRect(_boosterBarText);
-      final third = rect.width / 3;
+      _energyRefillLabel.text = _blank;
+      _undoLabel.text = '↩ Hoàn tác\n($undoCost xu)';
+      _shuffleLabel.text = '🔀 Xáo bàn\n($shuffleCost xu)';
+      _extraMovesLabel.text = '➕ $extraMovesAmount lượt\n($extraMovesCost xu)';
+    }
+    _rebuildBoosterButtons();
+  }
+
+  /// Booster tap zones are a fixed row geometry, independent of how the
+  /// labels above them wrap — avoids the old bug where a hit-rect computed
+  /// from rendered text bounds went stale once the text no longer fit on
+  /// one line.
+  void _rebuildBoosterButtons() {
+    final rowWidth = size.x - 2 * _boosterMargin;
+    final rowRect = Rect.fromLTWH(_boosterMargin, _boosterRowY - 6, rowWidth, _boosterRowHeight);
+    _buttons.clear();
+    if (_energyBlocked) {
+      _buttons.add(_Button(rowRect, _refillEnergy));
+    } else {
+      final colW = rowWidth / 3;
       _buttons
-        ..clear()
-        ..add(_Button(Rect.fromLTWH(rect.left, rect.top, third, rect.height), _useUndo))
-        ..add(_Button(Rect.fromLTWH(rect.left + third, rect.top, third, rect.height), _useShuffle))
-        ..add(_Button(Rect.fromLTWH(rect.left + third * 2, rect.top, third, rect.height), _useExtraMoves));
+        ..add(_Button(Rect.fromLTWH(rowRect.left, rowRect.top, colW, rowRect.height), _useUndo))
+        ..add(_Button(Rect.fromLTWH(rowRect.left + colW, rowRect.top, colW, rowRect.height), _useShuffle))
+        ..add(_Button(Rect.fromLTWH(rowRect.left + colW * 2, rowRect.top, colW, rowRect.height), _useExtraMoves));
     }
   }
 
-  Rect _textRect(TextComponent c) => Rect.fromLTWH(c.position.x - 4, c.position.y - 4, c.size.x + 8, c.size.y + 8);
+  /// A center-aligned label that wraps within [TextBoxConfig.maxWidth]
+  /// instead of running off the edge of the screen — [maxWidth] is set per
+  /// frame in [_layout] once the actual game width is known.
+  TextBoxComponent _wrappingLabel({required Color color, required double fontSize}) => TextBoxComponent(
+    text: _blank,
+    textRenderer: _bodyStyle(color: color, fontSize: fontSize),
+    boxConfig: const TextBoxConfig(maxWidth: 200, margins: EdgeInsets.zero),
+    align: Anchor.topCenter,
+    anchor: Anchor.topCenter,
+  );
 
   TextPaint _headerStyle() =>
       TextPaint(style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold));
 
-  TextPaint _bodyStyle({Color color = Colors.white70}) => TextPaint(style: TextStyle(color: color, fontSize: 15));
+  TextPaint _bodyStyle({Color color = Colors.white70, double fontSize = 15}) =>
+      TextPaint(style: TextStyle(color: color, fontSize: fontSize));
 }

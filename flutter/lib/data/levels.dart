@@ -15,7 +15,7 @@ const _chapter1 = <LevelConfig>[
     objectives: [ObjectiveDef(tier: 3, target: 2)],
     moveLimit: 16,
     producesIngredient: 'nest',
-    hint: 'Vuốt để 2 ô giống nhau chạm vào nhau và gộp lên cấp. Có Gà giò thì chạm vào để thu hoạch.',
+    hint: 'Vuốt để 2 ô giống nhau chạm vào nhau và gộp lên cấp. Gà giò khớp mục tiêu sẽ tự động thu hoạch.',
   ),
   LevelConfig(
     id: '1-2',
@@ -41,7 +41,7 @@ const _chapter1 = <LevelConfig>[
     objectives: [ObjectiveDef(tier: 3, target: 2), ObjectiveDef(tier: 4, target: 1)],
     moveLimit: 29,
     producesIngredient: 'hen',
-    hint: 'Hai mục tiêu: thu hoạch Gà giò ngay, hay giữ lại để gộp thành Gà mái?',
+    hint: '2 Gà giò đầu tự thu hoạch cho mục tiêu 1; Gà giò dư được giữ lại để gộp thành Gà mái.',
   ),
   LevelConfig(
     id: '1-4',

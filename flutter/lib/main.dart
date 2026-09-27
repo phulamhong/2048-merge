@@ -6,6 +6,11 @@ import 'data/chapters.dart' as chapter_data;
 import 'data/levels.dart' as level_data;
 import 'screens/home_screen.dart';
 
+/// Lets [HomeScreen] know whenever it becomes the visible route again — see
+/// its `didPopNext` for why this is needed instead of just awaiting the
+/// initial `Navigator.push`.
+final routeObserver = RouteObserver<ModalRoute<void>>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final storage = await SharedPrefsStorage.create();
@@ -23,6 +28,7 @@ class FarmMergeApp extends StatelessWidget {
       title: 'Nông Trại & Bếp Việt',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF588157)),
+      navigatorObservers: [routeObserver],
       home: HomeScreen(saveManager: saveManager),
     );
   }
