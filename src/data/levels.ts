@@ -1,0 +1,146 @@
+import type { LevelConfig } from '../core/types';
+
+/**
+ * moveLimit starts from ceil(minMoves × slack) and is then tuned with `npm run sim`
+ * (greedy-bot win rate: ch.1 ≈ 100%, ch.2 ≈ 80%, bosses ≈ 70%). Re-run it after any change.
+ */
+const chapter1: LevelConfig[] = [
+  {
+    id: '1-1',
+    name: 'Ổ trứng đầu tiên',
+    chainId: 'poultry',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [{ tier: 3, target: 2 }],
+    moveLimit: 16,
+    producesIngredient: 'nest',
+    hint: 'Vuốt để 2 ô giống nhau chạm vào nhau và gộp lên cấp. Có Gà giò thì chạm vào để thu hoạch.',
+  },
+  {
+    id: '1-2',
+    name: 'Đàn gà giò',
+    chainId: 'poultry',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [{ tier: 3, target: 3 }],
+    moveLimit: 22,
+    producesIngredient: 'flock',
+    hint: 'Thu hoạch không tốn lượt và giải phóng ô trống.',
+  },
+  {
+    id: '1-3',
+    name: 'Gà mái đẻ',
+    chainId: 'poultry',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [
+      { tier: 3, target: 2 },
+      { tier: 4, target: 1 },
+    ],
+    moveLimit: 29,
+    producesIngredient: 'hen',
+    hint: 'Hai mục tiêu: thu hoạch Gà giò ngay, hay giữ lại để gộp thành Gà mái?',
+  },
+  {
+    id: '1-4',
+    name: 'Cặp gà mái',
+    chainId: 'poultry',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [{ tier: 4, target: 2 }],
+    moveLimit: 29,
+    producesIngredient: 'hens',
+  },
+  {
+    id: '1-5',
+    name: 'Gà trống gáy (Boss)',
+    chainId: 'poultry',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [
+      { tier: 5, target: 1 },
+      { tier: 3, target: 2 },
+    ],
+    moveLimit: 36,
+    producesIngredient: 'rooster',
+    boss: true,
+  },
+];
+
+const chapter2: LevelConfig[] = [
+  {
+    id: '2-1',
+    name: 'Bánh phở',
+    chainId: 'rice',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [{ tier: 5, target: 2 }],
+    moveLimit: 45,
+    producesIngredient: 'noodle',
+  },
+  {
+    id: '2-2',
+    name: 'Rau thơm',
+    chainId: 'herbs',
+    mode: 'merge',
+    grid: { rows: 4, cols: 4 },
+    spawn: { perTurn: 1 },
+    objectives: [
+      { tier: 4, skinId: 'scallion', target: 2 },
+      { tier: 4, skinId: 'cilantro', target: 1 },
+    ],
+    moveLimit: 36,
+    producesIngredient: 'herbs',
+    hint: 'Bó rau ra ngẫu nhiên Hành lá, Ngò hoặc Húng. Bó không cần sẽ tự đổi thành xu.',
+  },
+  {
+    id: '2-3',
+    name: 'Thịt bò tái',
+    chainId: 'beef',
+    mode: 'split',
+    grid: { rows: 4, cols: 4 },
+    initialTiles: [{ tier: 5, row: 1, col: 1 }],
+    spawn: { perTurn: 0 },
+    objectives: [{ tier: 1, target: 8 }],
+    moveLimit: 13,
+    producesIngredient: 'beef',
+    hint: 'Chạm để TÁCH vật lớn thành 2 vật nhỏ hơn. Cẩn thận: vuốt ẩu sẽ gộp chúng lại!',
+  },
+  {
+    id: '2-4',
+    name: 'Nước dùng',
+    chainId: 'broth',
+    mode: 'mixed',
+    grid: { rows: 4, cols: 4 },
+    initialTiles: [{ tier: 5, row: 0, col: 0 }],
+    spawn: { perTurn: 1 },
+    objectives: [{ tier: 4, target: 3 }],
+    moveLimit: 16,
+    producesIngredient: 'broth',
+    hint: 'Tách Thùng lớn được 2 nồi, rồi gom Xương để có nồi thứ 3.',
+  },
+  {
+    id: '2-5',
+    name: 'Gia vị (Boss)',
+    chainId: 'spice',
+    mode: 'merge',
+    grid: { rows: 5, cols: 5 },
+    spawn: { perTurn: 1 },
+    objectives: [
+      { tier: 4, skinId: 'cinnamon', target: 1 },
+      { tier: 4, skinId: 'anise', target: 1 },
+    ],
+    moveLimit: 27,
+    producesIngredient: 'spice',
+    boss: true,
+  },
+];
+
+export const LEVEL_LIST: LevelConfig[] = [...chapter1, ...chapter2];
+export const LEVELS: Record<string, LevelConfig> = Object.fromEntries(LEVEL_LIST.map((l) => [l.id, l]));
