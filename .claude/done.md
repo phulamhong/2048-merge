@@ -1,0 +1,4 @@
+## 2026-09-27
+- [unity-poc-1] Scaffold Unity POC (port Board.ts/resolveLine.ts sang C#, controller IMGUI tự bootstrap) — chưa commit – review code bằng mắt (không có Unity Editor/dotnet trên máy dev để build/test tự động)
+- [unity-poc-2] Mở Unity Editor để xác nhận compile — HỦY, không làm nữa – user quyết định bỏ Unity, chuyển hẳn sang Flutter
+- [flutter-app-1] Scaffold app Flutter+Flame thật: port Board/resolveLine/GameSession/ObjectiveTracker/SaveManager/Rng sang Dart, port data (chains/levels/chapters), dựng FarmMergeGame (grid + swipe/tap + HUD) — chưa commit – 38 test Dart pass (mirror đúng tests/core/*.test.ts của bản TS), `flutter analyze` sạch, `flutter build macos --debug` build thành công, chạy app thật + swipe bằng cliclick, xác nhận qua screenshot (lượt 16→15, ô trượt & spawn đúng)

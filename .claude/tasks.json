@@ -1,0 +1,43 @@
+{
+  "updated_at": "2026-09-27T08:20:00Z",
+  "current_focus": "User quyết định bỏ Unity, chuyển hẳn sang Flutter (quen Flutter, chỉ publish store, không cần web) — đã tạo nhánh flutter-app với project Flutter+Flame chạy thật: core logic (Board/resolveLine/GameSession/ObjectiveTracker/SaveManager/Rng) port đầy đủ sang Dart, 38 test pass khớp hành vi bản TS gốc, `flutter analyze` sạch, build macOS debug thành công, đã tự động hoá swipe thật bằng cliclick và xác nhận qua screenshot (lượt giảm, ô trượt/spawn đúng). Nhánh unity-poc coi như dừng. Chờ user: xác nhận xoá/giữ nhánh unity-poc, và có muốn commit nhánh flutter-app không.",
+  "next_id": 6,
+  "domains": ["unity-poc", "game-design", "flutter-app"],
+  "tasks": [
+    {
+      "id": "game-design-3",
+      "title": "Viết docs/GAME_DESIGN.md — thiết kế mở rộng dài hạn (Vùng→Chương→Màn, vật cản đá/cỏ/băng, màn nhiều giai đoạn, lộ trình Phase 2-5)",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "File tạo tại docs/GAME_DESIGN.md, gắn link tham chiếu từ docs/SPECS.md §15. Thuần tài liệu markdown, không đổi code/test nên không cần chạy npm test. Chưa commit — đang ở working tree."
+    },
+    {
+      "id": "game-design-4",
+      "title": "Publish artifact 'Cẩm Nang Vùng Chơi' — chia lại 6 Vùng theo địa hình, board mockup + bảng mật độ chướng ngại vật/slack theo từng vùng, 6 lớp cơ chế chướng ngại vật dùng lại",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Artifact đã publish thành công tại https://claude.ai/artifact/4VTmWneQ2p8W3iE7PBct9r (icon map). Số liệu mật độ/slack trong đó là ước lượng thiết kế, chưa chạy qua sim/simulate.ts để kiểm chứng."
+    },
+    {
+      "id": "flutter-app-5",
+      "title": "Polish tiếp Flutter POC: asset thật thay ô màu, test hết 10 màn thật trên máy/simulator, xác nhận SharedPreferences lưu đúng giữa các lần mở app",
+      "domain": "flutter-app",
+      "status": "todo",
+      "blocked_by": null
+    }
+  ],
+  "open_questions": [
+    "Nhánh unity-poc: xoá hẳn hay giữ lại làm tài liệu tham khảo (không phát triển tiếp)?",
+    "Nhánh flutter-app đang untracked (chưa commit gì) — user có muốn commit ngay không?",
+    "Project 2048-merge chưa chạy /start (thiếu project.json, domains đầy đủ cho toàn repo) — có cần thiết lập không?",
+    "docs/GAME_DESIGN.md cũng chưa commit — gộp chung 1 lần commit hay tách riêng theo domain?",
+    "Cách chia Vùng theo địa hình (artifact) và theo món ăn (GAME_DESIGN.md §2) có hợp nhất thành 1 bảng canonical không, hay giữ 2 lớp độc lập như artifact đang giả định ở phần footer?",
+    "Từ GAME_DESIGN.md §10: undo/vật phẩm hỗ trợ dùng xu hay giới hạn số lần/ngày? Sự kiện Tết chặn theo thời gian thực hay mở vĩnh viễn? Có thêm tiền tệ cứng (gems) không? Bản Flutter có kế thừa thiết kế mở rộng này không, hay chỉ port đúng MVP Phase 1 hiện tại trước?"
+  ],
+  "dont_do": [
+    "Đừng giả định máy dev có Unity Editor / Unity Hub cài sẵn — đã kiểm bằng `mdfind`, `ls /Applications` và `which unity`: không có. (Không còn liên quan sau khi bỏ Unity, giữ lại làm lịch sử quyết định.)",
+    "Đừng bắt đầu code vật cản/stages trong src/core (bản web) trước khi user xác nhận thứ tự Phase ở GAME_DESIGN.md §9 — đây là tài liệu định hướng, user chưa duyệt implement.",
+    "Đừng đưa thẳng số liệu mật độ/slack trong artifact 'Cẩm Nang Vùng Chơi' vào levels.ts thật — đó là ước lượng minh hoạ, phải chạy npm run sim để chỉnh trước.",
+    "Đừng dùng find.textContaining/find.text để test nội dung vẽ bởi Flame TextComponent trong widget test — Flame vẽ trực tiếp lên canvas, không phải widget Text thật, nên find.text luôn ra 0. Test qua game state (session, gridComponent) hoặc tester.takeException() thay vì tìm text trên cây widget."
+  ]
+}
