@@ -20,6 +20,8 @@ class MemoryStorage implements KeyValueStorage {
   void setItem(String key, String value) => _map[key] = value;
 }
 
+const defaultEnergyMax = 5;
+
 class SaveData {
   static const version = 1;
   Map<String, int> levelStars;
@@ -27,12 +29,30 @@ class SaveData {
   List<String> cooked;
   List<String> decor;
   int coins;
+  int gems;
+  int energy;
+  int energyMax;
 
-  SaveData({Map<String, int>? levelStars, Map<String, int>? inventory, List<String>? cooked, List<String>? decor, this.coins = 0})
-    : levelStars = levelStars ?? {},
-      inventory = inventory ?? {},
-      cooked = cooked ?? [],
-      decor = decor ?? [];
+  /// Epoch ms marking the last time energy regen was applied. Null means
+  /// "never checked yet" — the first regen check will initialize it to now
+  /// without granting a windfall of energy for a long-idle save.
+  int? lastEnergyRefillMs;
+
+  SaveData({
+    Map<String, int>? levelStars,
+    Map<String, int>? inventory,
+    List<String>? cooked,
+    List<String>? decor,
+    this.coins = 0,
+    this.gems = 0,
+    int? energy,
+    this.energyMax = defaultEnergyMax,
+    this.lastEnergyRefillMs,
+  }) : levelStars = levelStars ?? {},
+       inventory = inventory ?? {},
+       cooked = cooked ?? [],
+       decor = decor ?? [],
+       energy = energy ?? (energyMax);
 
   factory SaveData.empty() => SaveData();
 
@@ -46,6 +66,10 @@ class SaveData {
       cooked: List<String>.from(json['cooked'] as List? ?? const []),
       decor: List<String>.from(json['decor'] as List? ?? const []),
       coins: json['coins'] as int? ?? 0,
+      gems: json['gems'] as int? ?? 0,
+      energy: json['energy'] as int?,
+      energyMax: json['energyMax'] as int? ?? defaultEnergyMax,
+      lastEnergyRefillMs: json['lastEnergyRefillMs'] as int?,
     );
   }
 
@@ -56,6 +80,10 @@ class SaveData {
     'cooked': cooked,
     'decor': decor,
     'coins': coins,
+    'gems': gems,
+    'energy': energy,
+    'energyMax': energyMax,
+    'lastEnergyRefillMs': lastEnergyRefillMs,
   };
 }
 
@@ -68,16 +96,104 @@ class RecordWinResult {
 const saveKey = 'farm2048.save.v1';
 const _starCoins = 10;
 
-/// Player progress: unlocks, stars, ingredient inventory, cooking.
-/// Ported from src/core/SaveManager.ts.
+/// One energy point regenerates every 20 minutes, up to energyMax. Tunable —
+/// no game-design sign-off yet on the exact pacing, this is a placeholder.
+const energyRegenInterval = Duration(minutes: 20);
+
+/// Player progress: unlocks, stars, ingredient inventory, cooking, and the
+/// economy layer (coins, gems, energy). Ported from src/core/SaveManager.ts,
+/// extended with gems/energy which have no TS/web equivalent yet.
 class SaveManager {
   final KeyValueStorage storage;
   final List<ChapterDef> chapters;
   final Map<String, LevelConfig> levels;
+
+  /// Injectable clock so energy regen is deterministic in tests.
+  final int Function() now;
+
   late SaveData data;
 
-  SaveManager(this.storage, this.chapters, this.levels) {
+  SaveManager(this.storage, this.chapters, this.levels, {int Function()? now})
+    : now = now ?? (() => DateTime.now().millisecondsSinceEpoch) {
     data = _load();
+    _regenEnergy();
+  }
+
+  // --- Economy: coins / gems ------------------------------------------
+
+  bool spendCoins(int amount) {
+    if (data.coins < amount) return false;
+    data.coins -= amount;
+    _persist();
+    return true;
+  }
+
+  void addGems(int amount) {
+    data.gems += amount;
+    _persist();
+  }
+
+  bool spendGems(int amount) {
+    if (data.gems < amount) return false;
+    data.gems -= amount;
+    _persist();
+    return true;
+  }
+
+  // --- Economy: energy ---------------------------------------------------
+
+  int get energy {
+    _regenEnergy();
+    return data.energy;
+  }
+
+  int get energyMax => data.energyMax;
+
+  bool get hasEnergy => energy > 0;
+
+  /// Time remaining until the next energy point, or Duration.zero when full.
+  Duration get timeUntilNextEnergy {
+    _regenEnergy();
+    if (data.energy >= data.energyMax) return Duration.zero;
+    final elapsed = now() - (data.lastEnergyRefillMs ?? now());
+    final remaining = energyRegenInterval.inMilliseconds - elapsed;
+    return Duration(milliseconds: remaining < 0 ? 0 : remaining);
+  }
+
+  bool spendEnergy() {
+    _regenEnergy();
+    if (data.energy <= 0) return false;
+    data.energy--;
+    _persist();
+    return true;
+  }
+
+  /// Instantly fill energy for gems. Returns false if not enough gems.
+  bool refillEnergyWithGems({int gemCost = 20}) {
+    if (!spendGems(gemCost)) return false;
+    data.energy = data.energyMax;
+    data.lastEnergyRefillMs = now();
+    _persist();
+    return true;
+  }
+
+  void _regenEnergy() {
+    final t = now();
+    if (data.lastEnergyRefillMs == null) {
+      data.lastEnergyRefillMs = t;
+      return;
+    }
+    if (data.energy >= data.energyMax) {
+      data.lastEnergyRefillMs = t;
+      return;
+    }
+    final elapsed = t - data.lastEnergyRefillMs!;
+    final ticks = elapsed ~/ energyRegenInterval.inMilliseconds;
+    if (ticks <= 0) return;
+    final grown = data.energy + ticks;
+    data.energy = grown > data.energyMax ? data.energyMax : grown;
+    data.lastEnergyRefillMs = data.lastEnergyRefillMs! + ticks * energyRegenInterval.inMilliseconds;
+    _persist();
   }
 
   bool isChapterUnlocked(String chapterId) {

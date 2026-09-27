@@ -147,6 +147,30 @@ class Board {
     return false;
   }
 
+  /// Booster: scramble every tile to a random cell, keeping the same set of
+  /// tiles (tier/skin/uid unchanged) — just new positions.
+  void shuffle() {
+    final existing = tiles().toList();
+    if (existing.isEmpty) return;
+    final positions = [for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) Pos(r, c)];
+    for (var i = positions.length - 1; i > 0; i--) {
+      final j = rng.intBelow(i + 1);
+      final tmp = positions[i];
+      positions[i] = positions[j];
+      positions[j] = tmp;
+    }
+    for (final t in existing) {
+      _cells[t.row][t.col] = null;
+    }
+    for (var i = 0; i < existing.length; i++) {
+      final t = existing[i];
+      final p = positions[i];
+      t.row = p.row;
+      t.col = p.col;
+      _cells[p.row][p.col] = t;
+    }
+  }
+
   Board clone(Rng rng) {
     final copy = Board(rows, cols, chain, rng);
     copy._nextUid = _nextUid;
