@@ -1,9 +1,16 @@
 {
-  "updated_at": "2026-09-27T15:55:00Z",
-  "current_focus": "Nhánh flutter-app: phiên thứ 3 (song song với economy-session ở trên) vừa xử lý 6 bug/yêu cầu user báo trực tiếp kèm 7 ảnh chụp màn hình thật trên điện thoại (feedback #1289-1294, xem flutter-app-11) — đây chính là các file mà economy-session đã note 'phiên kia đang sửa, KHÔNG đụng vào': levels.dart, farm_merge_game.dart, main.dart, home_screen.dart, level_intro_dialog.dart, level_result_dialog.dart, widget_test.dart. Đã xong cả 6, CHƯA commit (chờ user xác nhận, theo quy tắc chỉ commit khi được yêu cầu). Cũng phát hiện: bug 'về trang chủ vẫn khoá' rất có thể là do HomeScreen không refresh khi quay lại qua chuỗi pushReplacement nhiều màn liên tiếp (giả thuyết mạnh về mặt logic — suy từ số liệu energy giảm 2 điểm giữa 2 ảnh chụp chứng tỏ màn 1-4 THẬT SỰ đã được thắng — nhưng chưa tự viết được 1 test tái hiện đúng bug trên code cũ để xác nhận 100% cơ chế; đã fix bằng RouteObserver/RouteAware (mẫu chuẩn của Flutter cho đúng lớp bug này) nên an toàn để giữ dù chưa chắc chắn tuyệt đối đây là root cause duy nhất.",
-  "next_id": 12,
+  "updated_at": "2026-09-28T09:00:00Z",
+  "current_focus": "QUAN TRỌNG cho mọi phiên game-design: toàn bộ khung 'Vùng theo miền Việt Nam' (GAME_DESIGN.md §2/§2.1/§2.1a/§2.1b/§11/§12/§13) và 'Sổ tay Bà Năm'/4 phương án (STORY_CONCEPTS.md) ĐÃ BỊ THAY THẾ (2026-09-28, quyết định trực tiếp của user) — xem docs/GAME_DESIGN_ACTS.md. Cốt truyện mới: cô gái thành thị (tạm đặt tên 'Mai') thừa hưởng nông trại từ Bà Năm (đã mất, giữ lại làm người để lại di sản). Cấu trúc mới: Hồi (thay Vùng) → Chương → Màn, không giới hạn số Hồi trước — Hồi 1 Nông trại, Hồi 2 Ẩm thực Việt Nam (tái dùng ~100% nội dung Vùng 2 cũ ở §11 + §2.1b, chỉ đổi khung), Hồi 3 Nhà hàng quốc tế (mới, món Trung/Nhật/Hàn), Hồi 4 Cửa hàng thời trang (mới, quần áo/nón/giày dép), Hồi 5 Tiệm cà phê (mới, cà phê/trà sữa) — user yêu cầu thêm Hồi 4-5 ngay sau khi tôi viết xong Hồi 1-3. Cơ chế mới: chain có thể 'nối dài' qua nhiều Chương vượt trần tier 7 cũ (dùng initialTiles đã có sẵn trong engine + stages §4.2 GAME_DESIGN.md để chia nhỏ màn tier cao) — ví dụ mẫu: chain dừa 11 tier, hạt(2)→...→trái(256, hết Hồi 1)→phơi khô(512)→ngâm(1024)→mứt(2048, Hồi 2). §3-§10 của GAME_DESIGN.md (cơ chế lõi: vật cản/stages/tier/economy/kiến trúc) VẪN GIỮ NGUYÊN, không đổi gì. Cập nhật tiếp (game-design-19): tên chốt 'Mai', 5 NPC theo Hồi (§11), cốt truyện chi tiết (§12), vật cản mới 'Hư hao' (§13 — sinh mỗi 10 lượt nếu chưa thắng, dọn sau 5 va chạm, 2 ô hư leo thang thành 1 hư nặng chỉ dọn bằng booster mới 'Bộ Sửa Chữa'), và Hồi 1 chi tiết (§14 — Chương 'Vườn dừa' 5 màn). Phát hiện quan trọng: objective tier 8 KHÔNG khả thi trong 1 màn thường (~166 lượt theo công thức §7) — 'Vườn dừa' chỉ yêu cầu tới tier 6, đẩy nhu cầu `stages` lên sớm hơn dự kiến. Toàn bộ CHƯA commit — chỉ là thiết kế/nội dung, GAME_DESIGN_ACTS.md còn vài câu hỏi mở (§9) chưa quyết (giữ Tết dạng nào, thứ tự làm Hồi 4-5, món 3 nước Hồi 3, chỗ giới thiệu Hư hao).",
+  "next_id": 21,
   "domains": ["game-design", "flutter-app"],
   "tasks": [
+    {
+      "id": "game-design-13",
+      "title": "Phân tích ý tưởng từ game tương tự (Merge Dragons/Triple Town/Merge Mansion/Hay Day/Cooking Fever/Gardenscapes) và viết docs/GAME_DESIGN.md §12: NPC theo Vùng (bảng 5 NPC, NpcDef + npcId trên WorldDef) + Bảng đơn hàng 2 tầng (Tầng A đọc thẳng SaveData.levels[id].stars có sẵn, Tầng B cần dailyProgress mới)",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §12 vào docs/GAME_DESIGN.md, cập nhật bảng §5 và roadmap §9 (Phase 3c) — CHƯA commit. Kiểm tra trước khi viết: cook()/recordWin (cả src/core/SaveManager.ts lẫn flutter/lib/core/save_manager.dart) chỉ +1 inventory mỗi nguyên liệu ở lần qua màn đầu, không có kho dư — nên bỏ ý tưởng order-board kiểu 'giao nộp nguyên liệu dư' (Hay Day) ban đầu, đổi sang Tầng A đọc stars đã lưu sẵn để không đụng core."
+    },
     {
       "id": "game-design-3",
       "title": "Viết docs/GAME_DESIGN.md — thiết kế mở rộng dài hạn (Vùng→Chương→Màn, vật cản đá/cỏ/băng, màn nhiều giai đoạn, lộ trình Phase 2-5)",
@@ -47,6 +54,55 @@
       "evidence": "Thêm §11 vào docs/GAME_DESIGN.md (chưa commit). Toàn bộ moveLimit/vị trí vật cản là ước lượng theo công thức §7, CHƯA chạy sim/simulate.ts (bot chưa hiểu vật cản) — không đưa thẳng vào levels.ts."
     },
     {
+      "id": "game-design-7",
+      "title": "Chốt content chính + kế hoạch số màn ở docs/GAME_DESIGN.md §2.1a: xác nhận trục nội dung duy nhất (hành trình ẩm thực Việt theo vùng miền, mỗi Vùng dạy 1 cơ chế mới), giới hạn phạm vi v1.0 = 5 Vùng tuần tự thay vì để ngỏ '7+', bảng số chương/màn từng Vùng + tổng 60 màn/12 chương, Vùng 6 Tết tách hậu-launch",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §2.1a vào docs/GAME_DESIGN.md, chưa commit. Số chương của Vùng 3-5 (10/10/15 màn) là ƯỚC TÍNH suy từ số chain liệt kê sẵn ở bảng §2.1, ghi rõ trong doc là chưa chốt — cần làm bản chi tiết kiểu §11 cho từng Vùng đó trước khi implement, y như đã làm cho Vùng 2."
+    },
+    {
+      "id": "game-design-14",
+      "title": "Viết docs/GAME_DESIGN.md §13 — story concept xuyên suốt game ('Sổ tay của Bà Năm'): nối 5 NPC §12.1 thành 1 chuỗi (mỗi người nhắc tên người kế), mốc kết Vùng 5 (khai trương 'Quán Ba Miền'), khung 'sổ còn trang trống' để Vùng 6 Tết + Vùng 7+ kéo dài vô hạn mà không cần viết lại cốt truyện mỗi lần thêm Vùng",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §13 vào docs/GAME_DESIGN.md, chưa commit. Chỉ đổ nội dung vào field NpcLines.onWorldEnter/onWorldComplete đã có sẵn ở §12.1 — không thêm schema mới, không đụng core. Việc implement liệt kê ở §13.5 (điền lines cho 5 NPC, thêm 1 DecorDef 'Quán Ba Miền', đổi khung màn Sổ công thức) vẫn CHƯA làm — đây là bản thiết kế/nội dung, đúng quy ước tài liệu này."
+    },
+    {
+      "id": "game-design-15",
+      "title": "Nghiên cứu web (Con Rồng cháu Tiên, bánh chưng bánh giầy/Lang Liêu, hội quán Hội An, danh sách 32 di sản phi vật thể quốc gia về ẩm thực) + viết docs/STORY_CONCEPTS.md — 4 phương án bối cảnh VN cho story xuyên suốt (A: Sổ tay Bà Năm đã có ở §13, B: huyền thoại Con Rồng cháu Tiên, C: hành trình ghi danh Di sản Văn hoá Phi vật thể Quốc gia, D: mạng lưới hội quán), bảng so sánh 5 tiêu chí, đề xuất bản lai A+B",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "File docs/STORY_CONCEPTS.md, có trích nguồn Wikipedia/Wikisource/VietnamPlus/Hoianheritage.net cho từng chi tiết văn hoá dùng. Sửa 1 lỗi tự kiểm trong lúc nghiên cứu: ẩm thực Việt Nam CHƯA được UNESCO công nhận trực tiếp (chỉ 32 di sản cấp QUỐC GIA) — ghi rõ trong Phương án C để không lỡ viết sai khi implement. GAME_DESIGN.md §13 đã thêm 1 dòng trỏ sang file này, CHƯA commit cả 2 file, CHƯA chọn phương án cuối — đang chờ user quyết định."
+    },
+    {
+      "id": "game-design-16",
+      "title": "Sửa cấu trúc story từ 'mạch nối tiếp' sang 'tuyển tập modular' theo yêu cầu user (lo ngại nguồn content yếu nếu chạy 1 mạch thẳng): mỗi Vùng chỉ liên hệ khung chung (sổ/gia phả/hồ sơ/token), không NPC nào nhắc tên NPC Vùng khác — sửa cả GAME_DESIGN.md §13.2 (bảng Phương án A) lẫn cả 4 phương án trong STORY_CONCEPTS.md (B/D trước đó vẫn còn chuỗi nhắc-tên-người-kế, C vốn đã modular)",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm ràng buộc 'cấu trúc tuyển tập, không mạch nối tiếp' vào §0 STORY_CONCEPTS.md (áp dụng cho cả 4 phương án, không phải điểm khác biệt để so sánh) + GAME_DESIGN.md §13 (đoạn mở đầu + §13.4 bullet đầu). Giờ mỗi Vùng độc lập hoàn toàn — thêm/bớt/đổi thứ tự/để 1 Vùng nội dung yếu nằm im đều không ảnh hưởng Vùng khác. CHƯA commit, vẫn CHƯA chọn phương án cuối."
+    },
+    {
+      "id": "game-design-17",
+      "title": "Nghiên cứu thêm web (63 đặc sản 3 miền, lễ hội gắn món ăn) + viết docs/GAME_DESIGN.md §2.1b — kho đề tài cụ thể cho Vùng 7+/nội dung phụ, thay thế dòng sơ sài 'chả cá, bánh xèo, chè...' ở §2.1: chia 3 cỡ (Vùng đầy đủ: Huế-Đà Nẵng/Bắc Bộ ngoài Hà Nội/Miền Tây sông nước/Tây Bắc-Tây Nguyên; nội dung phụ 1 chương: mì Quảng, cao lầu, chả cá Lã Vọng, nem Lai Vung...; sự kiện mùa: Trung Thu, Giỗ Tổ Hùng Vương, Đoan Ngọ), có bảng tránh trùng với món đã dùng ở Vùng 1-5",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §2.1b vào docs/GAME_DESIGN.md + nguồn tham khảo [4][5][8][9][10][11] ở cuối file. Lưu ý cẩn trọng riêng cho nhóm Tây Bắc/Tây Nguyên (văn hoá dân tộc thiểu số cụ thể, tránh rập khuôn). Giỗ Tổ Hùng Vương được gợi ý nối trực tiếp với Cụ Từ ở Phương án B (STORY_CONCEPTS.md) nếu sau này chọn phương án đó. CHƯA commit, đây là danh sách ứng viên để chọn — chưa quyết định làm cái nào trước. LƯU Ý: task này giờ mô tả 1 hướng ĐÃ BỊ THAY THẾ bởi game-design-18 (xem current_focus) — dữ liệu món/đặc sản trong §2.1b vẫn tái dùng được, chỉ khung 'Vùng' không còn."
+    },
+    {
+      "id": "game-design-18",
+      "title": "THIẾT KẾ LẠI TỪ ĐẦU theo yêu cầu trực tiếp của user: cốt truyện mới (cô gái thành thị thừa hưởng nông trại từ Bà Năm đã mất) + cấu trúc Hồi→Chương→Màn (thay Vùng-theo-miền) gồm Hồi 1 Nông trại, Hồi 2 Ẩm thực Việt Nam (tái dùng nội dung cũ), Hồi 3 Nhà hàng quốc tế, Hồi 4 Cửa hàng thời trang, Hồi 5 Tiệm cà phê (2 Hồi sau user bổ sung giữa chừng) + cơ chế chain nối dài qua nhiều Chương vượt trần tier 7 (ví dụ mẫu: dừa 11 tier tới 2048, dùng initialTiles + stages có sẵn) — viết docs/GAME_DESIGN_ACTS.md, gắn banner 'đã thay thế' vào GAME_DESIGN.md §2/§11/§12/§13 và toàn bộ STORY_CONCEPTS.md",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "File mới docs/GAME_DESIGN_ACTS.md (10 mục: cốt truyện, cấu trúc, Hồi 1-5, cơ chế chain nối dài, câu hỏi mở, việc cần làm tiếp). Trước khi viết đã hỏi user 2 câu qua AskUserQuestion để tránh đoán sai: (1) có ánh xạ 3-Act vào Vùng cũ không → user chọn 'thiết kế lại từ đầu', (2) xử lý Bà Năm/NPC cũ thế nào → user chọn 'Bà Năm là người để lại nông trại (đã mất)'. §12.2 (order board Tầng A/B) và §4 (vật cản/stages/combo) của GAME_DESIGN.md tái dùng nguyên, không viết lại. CHƯA commit. Còn nhiều câu hỏi mở ở §9 file mới (tên nhân vật, NPC cho từng Hồi, số phận Tết, thứ tự làm Hồi 4-5) — chưa quyết."
+    },
+    {
+      "id": "game-design-19",
+      "title": "Chốt tên Mai + thêm NPC theo Hồi (§11), cốt truyện chi tiết mỗi Hồi (§12), thiết kế vật cản mới 'Hư hao' theo đúng cơ chế user mô tả (sinh mỗi 10 lượt, dọn sau 5 va chạm, 2 ô hư leo thang thành 1 ô hư nặng chỉ dọn được bằng công cụ riêng — §13), và nội dung/độ khó chi tiết Hồi 1 (Chương 'Trại gà nhỏ' tái dùng + Chương 'Vườn dừa' 5 màn mới — §14), viết vào docs/GAME_DESIGN_ACTS.md",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §11-14 vào GAME_DESIGN_ACTS.md, đánh dấu resolved 2 câu hỏi mở cũ (tên nhân vật, có NPC không) ở §9. Phát hiện kỹ thuật quan trọng khi thiết kế §14: KHÔNG thể đặt objective tier 8 (trái dừa) cho 1 màn thường — theo công thức §7 GAME_DESIGN.md sẽ ra ~166 lượt, vượt xa nhịp 3-8 phút/màn — nên 5 màn 'Vườn dừa' chỉ yêu cầu tới tier 6, tier 7-8 đạt được qua overflow tự động khi chơi dư; tier 8 chỉ thật sự cần khi làm initialTiles cho Chương 'Mứt dừa' sau. Từ đó đề xuất đẩy `stages` lên làm sớm hơn (cùng đợt với Đá) thay vì Phase 3a như dự kiến cũ. Vật cản Hư hao thêm 1 booster mới 'Bộ Sửa Chữa' vào economy đã có. CHƯA commit, CHƯA chạy sim để xác nhận số liệu 'Vườn dừa'. Sửa 1 lỗi JSON tự gây ra khi edit tasks.json turn trước (thiếu key 'open_questions') — đã fix, verify lại bằng python3 -m json.tool."
+    },
+    {
       "id": "flutter-app-10",
       "title": "5 sửa UX theo yêu cầu trực tiếp: animation event-driven (move/merge-pop/split-grow/shake/fly-harvest/spawn-in qua Flame Effects), objective icon (ObjectiveIconComponent + ObjectiveChip) thay text, auto-harvest theo match objective trong core (GameSession._autoHarvestMatches, không cần tap), LevelIntroDialog + LevelResultDialog qua GameScreen, HomeScreen (port ChapterMapScene) làm route gốc thay vì vào thẳng FarmMergeGame",
       "domain": "flutter-app",
@@ -69,12 +125,13 @@
     }
   ],
   "open_questions": [
+    "docs/GAME_DESIGN_ACTS.md §9 (5 câu hỏi mở của thiết kế MỚI): tên nhân vật chính (tạm 'Mai'); Hồi 1 có cần NPC 'cô bán hàng ở Chợ' không; giữ Tết dạng nào (bỏ hẳn hay 1 chương trong Hồi 2 mở quanh năm); Hồi 3-5 có cần nhân vật riêng không; thứ tự làm Hồi 4-5 (ngay sau Hồi 3 hay xen giữa Hồi 2/3); đẩy sớm `stages` lên trước Phase 3a không (cần cho Chương 'Mứt dừa'). Chưa có quyết định.",
     "Project 2048-merge chưa chạy /start (thiếu project.json, domains đầy đủ cho toàn repo) — có cần thiết lập không?",
-    "Cách chia Vùng theo địa hình (artifact) và theo món ăn (GAME_DESIGN.md §2) có hợp nhất thành 1 bảng canonical không, hay giữ 2 lớp độc lập như artifact đang giả định ở phần footer?",
-    "Từ GAME_DESIGN.md §10: undo/vật phẩm hỗ trợ dùng xu hay giới hạn số lần/ngày? Sự kiện Tết chặn theo thời gian thực hay mở vĩnh viễn? Có thêm tiền tệ cứng (gems) không? Bản Flutter có kế thừa thiết kế mở rộng này không, hay chỉ port đúng MVP Phase 1 hiện tại trước?"
+    "Từ GAME_DESIGN.md §10: undo/vật phẩm hỗ trợ dùng xu hay giới hạn số lần/ngày? Có thêm tiền tệ cứng (gems) không? — MỘT PHẦN đã trả lời qua economy Phase 1 (flutter-app-9): xu, không giới hạn/ngày, CÓ gems. Còn lại: câu hỏi 'Tết chặn thời gian thực hay mở vĩnh viễn' giờ đổi thành câu hỏi mới ở GAME_DESIGN_ACTS.md §9 (giữ Tết dạng nào trong thiết kế mới)."
   ],
   "dont_do": [
     "Đừng đề xuất quay lại Unity — user đã quyết định dứt điểm bỏ Unity để chuyển sang Flutter, nhánh unity-poc đã xoá hẳn (2026-09-27).",
+    "Đừng dùng lại khung 'Vùng theo miền Việt Nam' (GAME_DESIGN.md §2/§2.1/§2.1a/§2.1b/§11/§12/§13, đều đã gắn banner ⚠️) hay 4 phương án 'Sổ tay Bà Năm' ở STORY_CONCEPTS.md để thiết kế nội dung mới — cả hai ĐÃ BỊ THAY THẾ (2026-09-28) bởi docs/GAME_DESIGN_ACTS.md (Hồi→Chương→Màn, cô gái thành thị thừa hưởng nông trại). Dữ liệu chain/món/vật cản trong các mục cũ vẫn tái dùng được, chỉ khung câu chuyện/Vùng thì không.",
     "Đừng bắt đầu code vật cản/stages trong src/core (bản web) trước khi user xác nhận thứ tự Phase ở GAME_DESIGN.md §9 — đây là tài liệu định hướng, user chưa duyệt implement.",
     "Đừng đưa thẳng số liệu mật độ/slack trong artifact 'Cẩm Nang Vùng Chơi' vào levels.ts thật — đó là ước lượng minh hoạ, phải chạy npm run sim để chỉnh trước.",
     "Đừng dùng find.textContaining/find.text để test nội dung vẽ bởi Flame TextComponent trong widget test — Flame vẽ trực tiếp lên canvas, không phải widget Text thật, nên find.text luôn ra 0. Test qua game state (session, gridComponent) hoặc tester.takeException() thay vì tìm text trên cây widget.",

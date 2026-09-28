@@ -4,6 +4,13 @@
 > Mọi thứ ở đây là đề xuất cho các Phase tiếp theo — chưa implement, dùng để thống nhất hướng đi trước khi
 > đụng code. Khi một phần được implement, chuyển mô tả tương ứng sang `SPECS.md`.
 
+> ⚠️ **§2/§2.1/§2.1a/§2.1b/§11/§12/§13 ĐÃ ĐƯỢC THIẾT KẾ LẠI (2026-09-28)** — xem
+> [docs/GAME_DESIGN_ACTS.md](./GAME_DESIGN_ACTS.md). Đã bỏ khung "5 Vùng theo miền Việt Nam" + "Sổ tay Bà
+> Năm", thay bằng câu chuyện mới (cô gái thành thị thừa hưởng nông trại) + cấu trúc 3+ Hồi theo giai đoạn sự
+> nghiệp (Nông trại → Ẩm thực Việt → Nhà hàng quốc tế → Thời trang → Cà phê...). `STORY_CONCEPTS.md` (4
+> phương án cũ) cũng coi như đã thay thế. Các mục còn lại của tài liệu này (§1, §3-§10) **vẫn còn hiệu lực**
+> — không phụ thuộc câu chuyện/vùng miền, dùng chung cho thiết kế mới.
+
 ---
 
 ## 0. Vì sao redesign
@@ -41,6 +48,10 @@ Bốn yêu cầu gốc và cách tài liệu này đáp ứng:
 
 ## 2. Cấu trúc ba tầng: Vùng → Chương → Màn
 
+> ⚠️ **Đã thiết kế lại** — khung "Vùng theo miền Việt Nam" ở §2.1/§2.1a/§2.1b bên dưới không còn là hướng
+> dùng nữa, xem [docs/GAME_DESIGN_ACTS.md](./GAME_DESIGN_ACTS.md) §2. Cấu trúc 3 tầng Hồi→Chương→Màn ở dưới
+> đây vẫn đúng nguyên lý, chỉ đổi tên "Vùng" → "Hồi" và đổi nội dung nhét vào từng tầng.
+
 Hiện tại chỉ có 2 tầng (Chương → Màn). Thêm tầng **Vùng (World)** ở trên để tổ chức nội dung dài hạn và để
 UI bản đồ có chỗ nhóm nhiều chương lại (SPECS.md §14 đã ghi nhận giới hạn "màn hình bản đồ chỉ đủ chỗ 2 thẻ
 chương" — đây là lúc giải quyết nó bằng cách paginate theo Vùng).
@@ -69,6 +80,91 @@ thành **Vùng 2**, giữ nguyên ý tưởng vật cản đã chốt. Các Vùn
 Vùng 6 (Tết) là **sự kiện theo mùa** chứ không phải Vùng tuần tự — dùng chung engine nhưng có bảng xếp hạng
 nội dung riêng, mở lại mỗi năm với vật phẩm trang trí giới hạn. Đây là cơ chế chính giữ retention dài hạn
 sau khi người chơi đã qua hết nội dung "cốt truyện".
+
+### 2.1a Content chính & phạm vi v1.0 — chốt số Vùng/Chương/Màn
+
+**Content chính (đã nhất quán từ đầu, chốt lại ở đây thay vì để ngỏ):** merge-puzzle kiểu 2048 lồng trong
+**hành trình ẩm thực Việt Nam theo vùng miền** — mỗi Vùng = 1 miền địa lý + nhóm món ăn/nguyên liệu đặc
+trưng thật của miền đó, chơi qua từng Chương (= 1 công thức) để sưu tập nguyên liệu, nấu món, mở khoá trang
+trí. Đây là trục nội dung duy nhất của game (không rẽ nhánh sang chủ đề khác) — chiều sâu đến từ việc mỗi
+Vùng **dạy đúng 1 cơ chế mới** (§4) trên nền luật lõi không đổi, không phải từ việc đổi thể loại.
+
+Bảng Vùng ở §2.1 để "7+" mở vô hạn — phù hợp để *định hướng* nhưng không dùng để *lên kế hoạch sản xuất*
+được vì không có điểm dừng. Chốt phạm vi **v1.0 (đủ nội dung để publish store lần đầu)** ở 5 Vùng tuần tự,
+Vùng 6 (Tết) tách riêng làm nội dung hậu-launch, Vùng 7+ không lên kế hoạch trước — thêm theo nhu cầu sau
+khi có dữ liệu người chơi thật:
+
+| Vùng | Chương (5 màn/chương, quy ước hiện tại) | Số màn | Trạng thái |
+|---|---|---|---|
+| 1 — Trại nhỏ | Trại gà nhỏ · Tô phở bò (2) | 10 | ✅ Live — code + data đã có, đang polish |
+| 2 — Miền Trung | Cơm gà Hội An · Bánh mì · Bún chả (3) | 15 | 📝 Nội dung đủ chi tiết ở §11 — chưa chuyển thành code (cần Đá/Cỏ dại/Băng ở core trước, §11.5) |
+| 3 — Miệt vườn Nam Bộ | *(ước tính)* Trái cây miệt vườn · Hủ tiếu (2) | 10 | ⏳ Chưa thiết kế chi tiết — cần bản §11-style riêng trước khi code |
+| 4 — Biển đảo | *(ước tính)* Hải sản · Mắm & combo (2) | 10 | ⏳ Chưa thiết kế chi tiết |
+| 5 — Cao nguyên | *(ước tính)* Cà phê · Mật ong · Hồ tiêu (3) | 15 | ⏳ Chưa thiết kế chi tiết |
+| **Tổng v1.0** | **12 chương** | **60 màn** | 10 xong, 15 đã lên nội dung, 35 còn lại chưa thiết kế |
+| 6 — Tết *(hậu-launch)* | 2-3 chương sự kiện | 10-15 | Không tính vào v1.0 — làm sau khi 5 Vùng chính đã live, mở lại hàng năm |
+
+Vì sao 60 màn: ở nhịp 3-8 phút/màn (SPECS.md §1) là ~3-6 giờ nội dung "cốt truyện" cho v1.0 — đủ dày để
+không cảm thấy ngắn khi mới publish, nhưng không dàn quá mỏng cho một sản phẩm làm một mình (so với Vùng 2:
+riêng 15 màn đó đã cần 1 tài liệu §11 đầy đủ chain/objective/vật cản mới xong phần *thiết kế*, chưa kể
+code+sim). Số chương ước tính cho Vùng 3-5 suy từ số chain mới liệt kê ở bảng §2.1 (mỗi nhóm nguyên liệu
+lớn ≈ 1 chương, theo đúng cách Vùng 1/2 đang chia), **chưa phải quyết định cuối** — cần làm bản chi tiết
+kiểu §11 cho từng Vùng đó trước khi số chương/màn này được xem là chốt.
+
+Thứ tự thực hiện để đạt v1.0: theo đúng lộ trình Phase 2a→4 đã có ở §9 (vật cản Đá trước, rồi Vùng 2 xong
+cả 3 chương, rồi mới thiết kế+code Vùng 3-5). Không nhảy cóc thiết kế Vùng 3-5 trước khi Vùng 2 chạy được
+thật trên engine, vì mỗi Vùng mới phải xác nhận lại bằng bot sim (§7) — làm tuần tự tránh phải tune lại từ
+đầu nếu core đổi.
+
+### 2.1b Kho đề tài cho Vùng 7+ / nội dung phụ — tìm thêm bằng nghiên cứu
+
+§2.1 mới ghi "Vùng 7+: đặc sản khác (chả cá, bánh xèo, chè, mì Quảng, cao lầu…)" — quá sơ sài để dùng làm kế
+hoạch. Nhờ cấu trúc **tuyển tập** vừa chốt ở §13 (mỗi phần độc lập, không mạch nối tiếp), giờ có thể liệt kê
+thoải mái nhiều ứng viên cùng lúc mà không cần quyết định thứ tự — phần nào có tư liệu tốt/dễ làm thì làm
+trước, không phần nào "chặn đường" phần khác. Nghiên cứu dưới đây bổ sung ứng viên cụ thể theo 3 cỡ:
+
+- **Vùng đầy đủ** (10-15 màn, cỡ như Vùng 1-5) — cần đủ nhiều món/chain để chia 2-3 chương.
+- **Nội dung phụ / trang lẻ** (1 chương lẻ, không cần "Vùng" bao quanh) — hợp khi chỉ có 1 món đặc trưng,
+  hoặc muốn lấp thời gian giữa 2 Vùng lớn mà không cam kết cả 1 miền mới.
+- **Sự kiện mùa** (như Vùng 6 Tết — mở theo lịch, không chặn tiến trình chính).
+
+**Lưu ý tránh trùng** với món/chain đã dùng ở Vùng 1-5: gà, phở bò (rice/beef/broth/herbs/spice), cơm gà Hội
+An, bánh mì, bún chả, trái cây (xoài/dứa/dừa/sầu riêng), hủ tiếu, hải sản (tôm/cá/mực/cua), mắm, cà phê, mật
+ong, hồ tiêu, bánh chưng/mứt/hoa mai-đào (Tết) — các món dưới đây đều **khác** danh sách này.
+
+#### Ứng viên Vùng đầy đủ
+
+| Miền/khu vực | Món/chủ đề gộp thành 1 Vùng | Vì sao đủ chất liệu |
+|---|---|---|
+| Huế – Đà Nẵng (khác Hội An đã dùng ở Vùng 2) | Bún bò Huế, bánh tráng cuốn thịt heo, bánh bèo/nậm/lọc | 3 nhóm món rõ rệt, đủ chia 2-3 chương; bún bò Huế nằm trong top món ăn sáng được quốc tế xếp hạng cao ([Traveloka][8]) |
+| Bắc Bộ (ngoài Hà Nội đã dùng phở/bún chả) | Bánh cuốn, cốm làng Vòng, bánh đa cua Hải Phòng, bún cá rô đồng Hải Dương | Mỗi món gắn 1 địa danh cụ thể (làng Vòng, Hải Phòng, Hải Dương) — dễ tách chain theo địa danh như Vùng 2 đang làm |
+| Miền Tây sông nước (khác "Miệt vườn" Vùng 3 vốn thiên về trái cây) | Lẩu cá linh bông điên điển, gỏi sầu đâu, cá lóc nướng trui, bánh xèo | Đặc trưng mùa nước nổi — có thể gắn thêm cơ chế "mùa" nếu sau này muốn (không bắt buộc) ([Jamlos][9]) |
+| Tây Bắc/Tây Nguyên (dân tộc thiểu số) | Cơm lam, thịt trâu gác bếp, rượu cần | **Cẩn trọng:** đây là văn hoá của các dân tộc thiểu số cụ thể (Thái, Ê Đê, Tây Nguyên…) — nếu làm, nên ghi rõ tên dân tộc thay vì gộp chung chung, và tham khảo thêm nguồn trước khi viết NPC/lời thoại, tránh rập khuôn |
+
+#### Ứng viên nội dung phụ / trang lẻ (1 chương, không cần Vùng riêng)
+
+Đây chính là "kho đề tài" đã nhắc ở Phương án C (STORY_CONCEPTS.md) — có thể mượn thẳng danh sách 32 Di sản
+Văn hoá Phi vật thể **Quốc gia** (không phải UNESCO — xem lưu ý thuật ngữ ở STORY_CONCEPTS.md) làm nguồn xác
+thực, dùng được **bất kể chọn phương án story nào** vì mỗi trang giờ độc lập:
+
+| Món/nghề | Địa phương | Nguồn |
+|---|---|---|
+| Mì Quảng | Quảng Nam | Di sản quốc gia 8/2024, cùng đợt với phở Hà Nội ([Báo Hà Tĩnh][5]) |
+| Cao lầu | Hội An | Đặc sản riêng của Hội An, có thể làm trang phụ ngay trong Vùng 2 đã có thay vì chờ Vùng mới |
+| Chả cá (kiểu Lã Vọng) | Hà Nội | Món có gốc tích nhà hàng cụ thể — dễ viết 1 NPC "hậu duệ nghề gia truyền" |
+| Nghề làm nem Lai Vung | Đồng Tháp | Di sản quốc gia đầu 2024 ([VietnamPlus][4]) |
+| Bánh phồng Sơn Đốc, kẹo dừa | Bến Tre | Nghề thủ công, hợp làm "trang nghề" nhỏ hơn là món ăn |
+| Tôm khô Cà Mau | Cà Mau | Nghề chế biến, hợp bổ sung cho Vùng 4 Biển đảo mà không cần Vùng mới |
+
+#### Ứng viên sự kiện mùa (như Vùng 6 Tết)
+
+| Sự kiện | Gắn với | Ghi chú |
+|---|---|---|
+| Tết Trung Thu | Bánh nướng, bánh dẻo — biểu tượng đoàn viên ([Badinh.quangngai.gov.vn][10]) | Mạnh ngang Tết — đề xuất ứng viên Vùng-sự-kiện thứ 2 rõ nhất |
+| Giỗ Tổ Hùng Vương (10/3 âm lịch) | Mâm cúng bánh chưng/bánh dày tại Đền Hùng, Phú Thọ ([Wikipedia tiếng Việt][11]) | Nếu chọn Phương án B (Con Rồng cháu Tiên) ở STORY_CONCEPTS.md, đây là dịp **đúng nghĩa đen** để Cụ Từ xuất hiện — không cần bịa bối cảnh riêng |
+| Tết Đoan Ngọ (5/5 âm lịch) | Bánh tro, rượu nếp cái | Sự kiện nhỏ hơn Tết/Trung Thu, hợp làm sự kiện ngắn ngày giữa năm |
+
+---
 
 ### 2.2 Quy tắc mở khoá (mở rộng từ SPECS.md §7)
 
@@ -194,7 +290,8 @@ Ngoài nội dung màn, cần lý do để người chơi quay lại giữa các
 |---|---|---|
 | **Nông trại mở rộng dần** | Farm hiện tại (SaveManager `decor[]`) chỉ hiện công trình đã mở. Thêm: đất phải **mua** bằng xu để đặt công trình mới, tự sắp xếp (đã ghi ở Phase 3 SPECS.md) — biến Farm thành nơi "khoe" tiến trình, không chỉ là màn hình liệt kê. | Mở rộng `SaveData.decor` thành có toạ độ; không đổi `cook()` flow. |
 | **Sổ công thức (cookbook)** | Danh sách toàn bộ món/chain đã và chưa khám phá, kiểu "album sưu tập" — tăng cảm giác "còn nhiều thứ để làm" mỗi khi mở Vùng mới. | Thuần UI, đọc từ `CHAINS`/`CHAPTERS`, không cần state mới ngoài save hiện có. |
-| **Nhiệm vụ ngày/tuần** | Vd "Qua 3 màn bất kỳ đạt 2★", "Thu hoạch 20 ô tier ≥3" — thưởng xu, không ép chơi màn cụ thể. | State mới: `SaveData.dailyProgress`, reset theo ngày (client-side, chấp nhận gian lận đổi giờ máy ở bản không server). |
+| **NPC vùng miền** | Mỗi Vùng có 1 nhân vật dẫn chuyện, xuất hiện ở đầu/cuối Vùng và trên Farm — xem §12.1. | Thuần data (`npcs.ts` + `npcId` trên `WorldDef`), UI chỉ chèn avatar/lời thoại vào dialog đã có. |
+| **Bảng đơn hàng (order board)** | NPC vùng giao "đơn hàng" đổi thưởng — thay cho mô tả chung chung trước đây ("qua 3 màn đạt 2★"). Chia 2 tầng, xem §12.2. | Tầng A (đọc `SaveData.levels[id].stars` có sẵn, thêm `claimedOrders`) làm trước; tầng B mới cần `SaveData.dailyProgress`, reset theo ngày (client-side, chấp nhận gian lận đổi giờ máy ở bản không server). |
 | **Sự kiện theo mùa (Vùng 6 Tết, và tương lai Trung Thu…)** | Nội dung giới hạn thời gian, thưởng trang trí độc quyền. | Vùng độc lập như đã nói ở §2.1. |
 | **Vật phẩm hỗ trợ (đã ghi Phase 2 SPECS.md)** | Hoàn tác, Xẻng xoá 1 ô, +5 lượt — mua bằng xu. | Không đổi core, chỉ thêm hành động trong `GameSession` (undo cần lưu snapshot trước lượt). |
 
@@ -259,7 +356,7 @@ sau đó băng, cỏ dại, rồi mới tới `stages` (phức tạp hơn vì đ
 | **Phase 2c** | Vật phẩm hỗ trợ (hoàn tác/xẻng/+lượt), bản đồ cuộn được (đã ghi SPECS.md) | Không phụ thuộc obstacle |
 | **Phase 3a** | Vùng 3 Miệt vườn Nam Bộ + cơ chế `stages` | 2a, 2b |
 | **Phase 3b** | Vùng 4 Biển đảo (Lưới đánh cá + `combo` mode) | 3a |
-| **Phase 3c** | Sổ công thức, nhiệm vụ ngày/tuần | Không phụ thuộc — làm song song bất kỳ lúc nào |
+| **Phase 3c** | Sổ công thức; NPC vùng miền + Bảng đơn hàng tầng A (§12); nhiệm vụ ngày/tuần tầng B (§12.2) | Không phụ thuộc — làm song song bất kỳ lúc nào |
 | **Phase 4** | Vùng 5 Cao nguyên, art thật thay emoji (đã ghi SPECS.md Phase 3) | — |
 | **Phase 5+** | Vùng sự kiện Tết, các Vùng đặc sản mở thêm theo nhu cầu | Chỉ cần data mới nếu không thêm cơ chế |
 
@@ -279,6 +376,10 @@ sau đó băng, cỏ dại, rồi mới tới `stages` (phức tạp hơn vì đ
 ---
 
 ## 11. Nội dung chi tiết Vùng 2, Chương 3-5 — sẵn sàng chuyển thành data
+
+> ⚠️ **Nhãn "Vùng 2" đã lỗi thời** (xem banner đầu file) nhưng **nội dung chain/màn/vật cản bên dưới vẫn tái
+> dùng được nguyên vẹn** — chuyển sang làm 3 Chương trong "Hồi 2 — Ẩm thực Việt Nam", xem
+> [docs/GAME_DESIGN_ACTS.md](./GAME_DESIGN_ACTS.md) §4.1. Không cần thiết kế lại phần này.
 
 Cụ thể hoá §2.1/§4.1/§7 cho đúng 3 chương đã chốt ở `SPECS.md` (Đá → Ch.3 Cơm gà Hội An, Cỏ dại → Ch.4 Bánh
 mì, Băng → Ch.5 Bún chả). Giữ đúng khuôn `ChainDef`/`ChapterDef`/`LevelConfig` hiện có (`src/core/types.ts`) +
@@ -410,6 +511,185 @@ Vùng 2 mở đúng lúc người chơi nấu xong Tô phở bò (ch2), không �
    tiêu Vùng 2 (~75-80% màn thường, ~65-70% màn boss, theo §7).
 3. Asset thật: emoji/màu ở trên là placeholder giống 6 chain hiện có — thay khi có art thật (đã ghi trong
    task `flutter-app-5`).
+
+---
+
+## 12. NPC vùng miền & Bảng đơn hàng — cụ thể hoá §5
+
+> ⚠️ **Bảng 5 NPC "theo Vùng" ở §12.1 đã lỗi thời** (không còn 5 Vùng theo miền) — nhưng **cơ chế `NpcDef`/
+> `NpcLines` và Bảng đơn hàng (order board) 2 tầng bên dưới vẫn dùng nguyên**, chỉ đổi gắn NPC theo Hồi thay
+> vì theo Vùng, và Order Board Tầng A đổi thành "Chợ" ở Hồi 1 — xem
+> [docs/GAME_DESIGN_ACTS.md](./GAME_DESIGN_ACTS.md) §3.2.
+
+Hai ý tưởng rút từ soi các game merge/farm-sim tương tự (Merge Mansion/Gardenscapes cho lớp nhân vật dẫn
+chuyện, Hay Day/Township cho bảng đơn hàng), chọn lọc lại cho khớp kiến trúc hiện tại. Cả hai đúng nguyên
+tắc "core thuần, nội dung là data" (§11.1 SPECS.md): không sửa `src/core`, chỉ thêm data + chèn thêm vào UI
+dialog đã có (`LevelIntroDialog`, `LevelResultDialog`, HomeScreen/Farm).
+
+### 12.1 NPC theo Vùng
+
+Mỗi **Vùng** (không phải mỗi Chương, để giữ chi phí asset thấp — 5 avatar cho v1.0 thay vì 12 theo số
+chương) có đúng 1 nhân vật gắn với vùng miền, xuất hiện ở đầu/cuối Vùng và đứng ở Farm cạnh công trình vùng
+đó đã mở khoá:
+
+| Vùng | NPC | Vai trò gợi ý |
+|---|---|---|
+| 1 — Trại nhỏ | Bà Năm | Chủ quán ăn nhỏ trong làng, dạy nấu gà/phở |
+| 2 — Miền Trung | Chú Sáu | Người gốc Hội An/Huế, biết cả 3 món (cơm gà, bánh mì, bún chả) |
+| 3 — Miệt vườn Nam Bộ | Dì Ba | Chủ vườn trái cây, mối quen bán hủ tiếu |
+| 4 — Biển đảo | Anh Hải | Ngư dân, biết nghề làm mắm |
+| 5 — Cao nguyên | Ông Bảy | Chủ rẫy cà phê/hồ tiêu, nuôi ong lấy mật |
+
+Data model, file mới `npcs.ts` (giữ đúng khuôn `ChainDef`/`ChapterDef` — tách data khỏi core):
+
+```ts
+interface NpcLines {
+  onWorldEnter: string;        // hiện ở LevelIntroDialog, màn đầu tiên của World
+  onChainFirstUnlock?: string; // hiện khi lần đầu thấy 1 chain mới của World (tuỳ chọn, có thể bỏ ở v1.0)
+  onWorldComplete: string;     // hiện ở LevelResultDialog, màn cuối cùng của World
+}
+interface NpcDef { id: string; name: string; avatarEmoji: string; worldId: string; lines: NpcLines }
+```
+
+`WorldDef` (đã đề xuất ở §11.4) thêm 1 trường `npcId: string` để nối World ↔ NPC — không cần bảng tra cứu
+riêng.
+
+Hiển thị: `LevelIntroDialog`/`LevelResultDialog` chèn thêm 1 dòng avatar+thoại tuỳ chọn (`npcLine?: string`
+truyền vào constructor) khi màn đang vào/vừa qua là màn đầu/cuối của 1 World — logic chọn `npcLine` nằm ở
+tầng gọi dialog (HomeScreen/GameScreen), dialog tự thân không cần biết gì về World. Farm: NPC đứng cạnh
+decor World đó, tap vào hiện 1 dòng flavor ngẫu nhiên (rút từ mảng `lines` cố định, không cần thêm state) —
+phần này là "làm cho thêm" (nice-to-have), có thể bỏ qua ở v1.0 nếu thiếu thời gian mà không ảnh hưởng phần
+còn lại.
+
+### 12.2 Bảng đơn hàng (order board)
+
+**Ràng buộc từ kiến trúc hiện tại** (khác giả định ban đầu khi so với Hay Day): `cook()` trừ mỗi nguyên
+liệu đúng 1 đơn vị và mỗi Chương chỉ nấu **một lần** (SPECS.md §7); `SaveData.inventory`/`recordWin` chỉ
+cộng +1 mỗi nguyên liệu **ở lần qua màn đầu tiên** (SPECS.md §8, `save_manager.dart` giữ y nguyên hành vi
+này) — chơi lại không tích thêm nguyên liệu vào kho. Vì vậy **không thể** làm đơn hàng kiểu "giao nộp N
+nguyên liệu từ kho dư" mà không thêm hẳn 1 cơ chế tích trữ dư mới (đụng core). Chia làm 2 tầng để tầng rẻ
+làm được ngay:
+
+**Tầng A — không đụng core, làm được ngay cùng đợt với §12.1:**
+Đơn hàng đọc thẳng dữ liệu **đã có sẵn** trong `SaveData.levels[id].stars`, không cần state chơi mới ngoài
+1 danh sách nhỏ để tránh phát thưởng trùng:
+
+- Mỗi Vùng có 3-5 đơn **cố định, không refresh** do NPC vùng đó giao, kiểu: "Đạt 3★ ở màn 2-2", "Tổng ≥ 8
+  sao trong cả Vùng 2", "Nấu xong Chương Bún chả".
+- Hoàn thành → thưởng xu 1 lần (không lặp lại).
+- State mới tối thiểu: `claimedOrders: Set<string>` (id đơn đã nhận thưởng) trong `SaveData` — không phải
+  luật chơi, chỉ là cờ chống phát thưởng 2 lần.
+- Vì đọc dữ liệu đã lưu sẵn, đơn hàng Tầng A **hoạt động ngay cả với save cũ** đã chơi trước khi tính năng
+  ra mắt (không cần migrate dữ liệu).
+
+**Tầng B — bản lặp lại hàng ngày, cần `dailyProgress` đã phác ở §5 (làm sau, đúng lịch Phase 3c):**
+Đơn dựa trên đếm hành động trong ngày (số màn ≥2★ trong ngày, số ô tier≥3 đã gộp, số lần thu hoạch) — cần
+`GameSession` phát thêm sự kiện đếm được và `SaveManager` cộng dồn vào `dailyProgress`, reset theo ngày. Đây
+mới là phần thật sự đụng `core/` như đã cảnh báo ở §5, khác hẳn Tầng A.
+
+**Thứ tự đề xuất:** làm NPC (§12.1) + Order Tầng A (§12.2) cùng lúc — dùng chung 1 màn hình "Bảng đơn hàng"
+mới (liệt kê đơn theo Vùng, giao diện tương tự `LevelResultDialog` hiện có), text do NPC vùng "nói". Order
+Tầng B gộp chung lịch với `dailyProgress`/nhiệm vụ ngày ở Phase 3c (§9) — không làm trước khi Tầng A đã có
+người chơi thật xác nhận là đủ vui, tránh tốn công cho state phức tạp hơn nếu chưa cần.
+
+---
+
+## 13. Cốt truyện xuyên suốt — "Sổ tay của Bà Năm" *(đã thay thế)*
+
+> ⚠️ **Đã thay thế (2026-09-28).** User chọn thiết kế lại từ đầu thay vì chọn giữa 4 phương án ở
+> `STORY_CONCEPTS.md` — xem cốt truyện mới ("cô gái thành thị thừa hưởng nông trại") ở
+> [docs/GAME_DESIGN_ACTS.md](./GAME_DESIGN_ACTS.md) §1. `STORY_CONCEPTS.md` cũng coi như lỗi thời. Giữ lại
+> nội dung cũ bên dưới để tham khảo (1 NPC — Bà Năm — vẫn tái dùng được trong bản mới, làm người để lại
+> nông trại đã mất thay vì còn sống dẫn dắt trực tiếp).
+
+Trả lời trực tiếp yêu cầu "cần 1 story concept để kéo dài nội dung": §12.1 đã có 5 NPC theo Vùng nhưng họ
+đang là 5 người xa lạ không liên quan nhau — không có lý do trong-truyện để người chơi lần lượt đi gặp từng
+người, và không có khung để "Vùng 7+" luôn có chỗ đứng tự nhiên. Mục này thêm đúng 1 khung chung nối họ lại,
+**không thêm field dữ liệu mới nào** — chỉ là nội dung đổ vào `NpcLines.onWorldEnter`/`onWorldComplete` đã
+có sẵn ở §12.1.
+
+**Cấu trúc tuyển tập, không phải mạch nối tiếp:** ban đầu mỗi Vùng được nối bằng cách NPC trước nhắc tên NPC
+sau (kiểu "chú Sáu kể có dì Ba ở miệt vườn") — nhưng vậy tạo ra 1 chuỗi phụ thuộc: nếu sau này 1 Vùng bị trì
+hoãn, đổi thứ tự, hoặc tư liệu/nội dung cho Vùng đó yếu hơn dự kiến, cả chuỗi phía sau nó bị treo (Vùng đã
+xong rồi mà lại nhắc tên 1 người chưa tồn tại). Bảng ở §13.2 dưới đây đã sửa lại: **mỗi Vùng là 1 mục độc
+lập trong sổ**, chỉ liên hệ với Bà Năm/cuốn sổ (khung chung), không liên hệ với Vùng khác — thêm, bớt, đổi
+thứ tự, hay để 1 Vùng "yếu" nằm im chưa làm đều không ảnh hưởng phần còn lại.
+
+### 13.1 Tiền đề
+
+Bà Năm (NPC Vùng 1, đã có) không chỉ là chủ quán ăn nhỏ trong làng — hồi trẻ bà từng đi khắp ba miền học
+nghề nấu ăn, quen biết một người ở mỗi vùng, rồi ngừng lại để mở quán nhỏ nuôi cháu. Bà có 1 cuốn **sổ tay
+cũ**, ghi chép công thức + tên/nơi ở của từng người bạn đó, nhưng bỏ dở — nhiều trang còn trống, nhiều cái
+tên còn chưa có công thức đi kèm. Người chơi là cháu của bà, về quê phụ dựng lại chuồng gà/quán phở (Vùng 1,
+đúng nội dung đang có). Sau khi xong Vùng 1, bà đưa cuốn sổ cho cháu, nhờ đi tiếp giúp bà — vì chân bà không
+còn đi xa được nữa.
+
+Không có phản diện, không có twist — mạch cảm xúc là **hoài niệm + gìn giữ**: mỗi công thức không ghi lại
+kịp coi như mất luôn. Đủ nhẹ cho 1 game casual, nhưng đủ lý do để "đi tiếp" và đủ ấm để giữ chân.
+
+### 13.2 Vòng cung mỗi Vùng — dùng đúng 2 hook đã có sẵn ở NpcDef
+
+Mỗi Vùng chỉ cần 2-3 câu, đổ vào đúng 2 trường đã thiết kế ở §12.1 (`onWorldEnter`, `onWorldComplete`) —
+không cần thêm UI hay state mới. Ngay từ Vùng 1, bà Năm đưa cháu cuốn sổ đã ghi sẵn **tên + nơi ở** của cả 4
+người còn lại (không phải nghe kể dần) — mỗi Vùng sau chỉ lật đúng 1 trang đã có sẵn tên, không có Vùng nào
+cần biết tới Vùng khác:
+
+| Vùng | NPC | `onWorldEnter` (khi vào Vùng) | `onWorldComplete` (khi nấu xong Chương cuối Vùng) |
+|---|---|---|---|
+| 1 | Bà Năm | (giữ nguyên phần mở đầu game hiện có) | Bà đưa cuốn sổ cũ, nhờ cháu đi tiếp — sổ đã có sẵn vài cái tên/địa danh, chưa có công thức |
+| 2 | Chú Sáu | Cháu lật đúng trang ghi "Chú Sáu, Hội An" — chú nhận ra ngay "cháu bà Năm à" | Chú Sáu viết thêm công thức vào đúng trang đó — xong 1 trang |
+| 3 | Dì Ba | Trang khác trong sổ: "Dì Ba, miệt vườn" | Dì Ba viết thêm công thức vào trang của mình — xong 1 trang |
+| 4 | Anh Hải | Trang khác: "Anh Hải, biển đảo" | Anh Hải viết thêm công thức vào trang của mình — xong 1 trang |
+| 5 | Ông Bảy | Trang cuối cùng có sẵn tên: "Ông Bảy, cao nguyên" | Ông Bảy viết thêm công thức — hết những trang bà Năm đã ghi tên sẵn từ trước |
+
+Mỗi Vùng chỉ cần đúng 3 chi tiết cố định — **tên NPC, địa danh, món ăn** — không cần biết gì về NPC khác.
+Không cây hội thoại, không lựa chọn, không tốn công localize nhiều hơn hiện tại. Người chơi không có tên/
+thoại riêng (nhân vật câm, gọi là "cháu" — chuẩn thể loại casual, khỏi tốn chi phí giọng nói/bản dịch theo
+ngôi).
+
+### 13.3 Mốc kết Vùng 5 (hết v1.0) — không phải kết thúc game
+
+Sau Vùng 5 (§2.1a), quay lại Bà Năm: mở lễ khai trương **"Quán Ba Miền"** — 1 công trình Farm mới, to nhất,
+chỉ mở khi cả 5 Chương chính đã nấu xong (đúng cơ chế `decor`/`cook()` hiện có, không cần state mới). Câu
+thoại đóng: cuốn sổ **vẫn còn vài trang trống cuối cùng** — bà Năm nói "chắc còn ai đó bà quên mất tên". Đây
+là lý do trong truyện cho Vùng 6 (Tết — trang riêng của sổ, "trang nào cũng có 1 cái Tết") và Vùng 7+ (mỗi
+trang trống là 1 vùng/món mở rộng sau này) **không cần viết lại cốt truyện mỗi lần thêm Vùng** — khung
+"cuốn sổ chưa đầy" tự nhiên chừa chỗ vô hạn, đúng yêu cầu "kéo dài nội dung".
+
+### 13.4 Vì sao khung này kéo dài được mà không tốn công tuyến tính
+
+- **Không phụ thuộc Vùng khác** — mỗi Vùng chỉ cần biết tên/địa danh/món của chính nó (đã có sẵn trong sổ từ
+  Vùng 1), không cần biết gì về Vùng trước hay Vùng sau — viết độc lập, làm theo thứ tự nào cũng được, đúng
+  nguyên tắc "Vùng là level pack" ở §1 và đúng lo ngại "nguồn content có thể yếu nếu chạy 1 mạch thẳng".
+- **Nguồn đề tài không giới hạn trước** — Việt Nam còn rất nhiều đặc sản chưa dùng (đã liệt kê sẵn ở "Vùng
+  7+" trong §2.1: chả cá, bánh xèo, chè, mì Quảng, cao lầu…), mỗi cái là 1 "cái tên trong sổ" hợp lý, không
+  cần bịa lý do mới.
+- **Chi phí viết cố định mỗi Vùng mới**: đúng 2 câu (`onWorldEnter` + `onWorldComplete`) + tên NPC mới trong
+  bảng §12.1 — không tăng theo số Vùng đã có trước đó.
+- **Sổ công thức (cookbook, đã ghi ở §5)** trở thành đúng nghĩa đen "cuốn sổ của bà Năm" trong UI thay vì 1
+  màn hình liệt kê chung chung — không cần xây thêm màn hình mới cho story, chỉ đổi khung/tên gọi màn hình
+  đã có trong kế hoạch.
+
+### 13.5 Việc cần làm khi implement (thuần data, không đụng core)
+
+1. `npcs.ts`/`NpcDef` (§12.1): điền `lines` theo bảng §13.2 cho 5 NPC hiện có.
+2. Farm: thêm 1 `DecorDef` "Quán Ba Miền", `unlocks` khi *cả 5* Chương chính (không tính Vùng 6 Tết) đã
+   `cooked` — kiểm tra ở tầng gọi `cook()`, không sửa `SaveManager.cook()`.
+3. Màn hình "Sổ công thức" (§5, chưa code): đổi khung hiển thị thành trang sổ tay (mỗi Vùng = vài trang),
+   NPC + `onWorldComplete` hiện lại khi lật tới trang Vùng đó đã xong — thuần UI, đọc dữ liệu đã lưu sẵn.
+4. Không cần đổi `LevelIntroDialog`/`LevelResultDialog` ngay — có thể chèn `npcLine` vào 2 dialog này sau,
+   đúng như đã ghi ở §12.1, khi nào rảnh tay.
+
+---
+
+### Nguồn tham khảo (§2.1b)
+
+- [4] [Tìm hiểu về 32 Di sản Phi vật thể Quốc gia liên quan đến ẩm thực của Việt Nam – VietnamPlus](https://www.vietnamplus.vn/tim-hieu-ve-32-di-san-phi-vat-the-quoc-gia-lien-quan-den-am-thuc-cua-viet-nam-post971858.vnp)
+- [5] [Toàn bộ 32 di sản phi vật thể Quốc gia về ẩm thực Việt Nam – Báo Hà Tĩnh](https://baohatinh.vn/toan-bo-32-di-san-phi-vat-the-quoc-gia-ve-am-thuc-viet-nam-post274765.html)
+- [8] [Khám phá thế giới đặc sản Việt Nam khắp 3 miền – Traveloka](https://www.traveloka.com/vi-vn/explore/culinary/dac-san-viet-nam/146236)
+- [9] [Top 9 các món ăn Việt Nam đặc sản 3 miền – Jamlos](https://www.jamlos.com/blogs/bat-trend/mon-an-viet-nam)
+- [10] [Ý nghĩa Tết Trung thu ở Việt Nam – Cổng TTĐT xã Ba Đình, Quảng Ngãi](https://badinh.quangngai.gov.vn/gioi-thieu/tin-chi-dao-dieu-hanh/tuyen-truyen/y-nghia-tet-trung-thu-o-viet-nam.html)
+- [11] [Giỗ Tổ Hùng Vương – Wikipedia tiếng Việt](https://vi.wikipedia.org/wiki/Gi%E1%BB%97_T%E1%BB%95_H%C3%B9ng_V%C6%B0%C6%A1ng)
 
 ---
 
