@@ -201,6 +201,19 @@ class ChapterDef {
   });
 }
 
+/// A "tài sản" (property) on the world map — roughly 1 per Hồi, grouping
+/// several contiguous [ChapterDef]s as "locations" (chuồng gà, vườn dừa...)
+/// the player unlocks one by one. Purely a display grouping on top of the
+/// existing flat `chapters` list/unlock order (lib/data/chapters.dart) — not
+/// a new save-data concept.
+class PropertyDef {
+  final String id;
+  final String name;
+  final String emoji;
+  final List<String> chapterIds;
+  const PropertyDef({required this.id, required this.name, required this.emoji, required this.chapterIds});
+}
+
 /// Mutable, unlike the rest of this file — mirrors Tile in types.ts, which the
 /// TS Board also mutates in place (row/col/tier/skinId/bornFrom on split&slide).
 class Tile {

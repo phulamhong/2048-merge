@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -47,18 +49,27 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
   final String levelId;
   final void Function(GameSession session, RecordWinResult? winResult)? onLevelEnd;
 
-  FarmMergeGame({required this.saveManager, required this.levelId, this.onLevelEnd});
+  /// Always reachable — even mid-level, even when out of energy or after a
+  /// loss — so the player is never stuck on the board with no way out.
+  final VoidCallback? onHome;
+
+  FarmMergeGame({required this.saveManager, required this.levelId, this.onLevelEnd, this.onHome});
 
   static const double swipeThreshold = 24;
   static const double _objectiveIconSize = 44;
   static const double _objectiveGap = 18;
   static const double _gridTop = 210;
+  static const double _gridSideMargin = 16;
+  static const double _gridBottomReserve = 70;
   static const double _boosterMargin = 16;
   static const double _boosterRowY = 148;
   static const double _boosterRowHeight = 40;
+  static const double _homeButtonWidth = 84;
+  static const double _homeButtonHeight = 30;
 
   late GameSession session;
   late GridComponent gridComponent;
+  late TextComponent _homeLabel;
   late TextComponent _titleText;
   late TextComponent _movesText;
   late TextComponent _economyText;
@@ -91,6 +102,12 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     gridComponent = GridComponent(session: session);
     add(gridComponent);
 
+    _homeLabel = TextComponent(
+      text: '🏠 Trang chủ',
+      anchor: Anchor.topRight,
+      textRenderer: _bodyStyle(color: Colors.white, fontSize: 13),
+    );
+    add(_homeLabel);
     _titleText = TextComponent(position: Vector2(16, 12), textRenderer: _headerStyle());
     _movesText = TextComponent(position: Vector2(16, 42), textRenderer: _bodyStyle());
     _economyText = TextComponent(position: Vector2(16, 64), textRenderer: _bodyStyle(color: Colors.amber.shade200));
@@ -142,7 +159,19 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
   void _layout() {
     if (size.x < _minLayoutWidth) return;
 
-    gridComponent.position = Vector2((size.x - gridComponent.size.x) / 2, _gridTop);
+    _homeLabel.position = Vector2(size.x - 12, 12);
+
+    final maxBoardWidth = size.x - 2 * _gridSideMargin;
+    final maxBoardHeight = size.y - _gridTop - _gridBottomReserve;
+    var scale = 1.0;
+    if (gridComponent.size.x > 0) scale = math.min(scale, maxBoardWidth / gridComponent.size.x);
+    if (gridComponent.size.y > 0 && maxBoardHeight > 0) {
+      scale = math.min(scale, maxBoardHeight / gridComponent.size.y);
+    }
+    gridComponent.scale = Vector2.all(scale);
+    final boardW = gridComponent.size.x * scale;
+    final boardH = gridComponent.size.y * scale;
+    gridComponent.position = Vector2((size.x - boardW) / 2, _gridTop);
 
     final n = _objectiveIcons.length;
     final totalW = n * _objectiveIconSize + (n - 1) * _objectiveGap;
@@ -153,7 +182,7 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     }
 
     final hintMaxWidth = size.x - 2 * _boosterMargin;
-    _hintText.position = Vector2(size.x / 2, gridComponent.position.y + gridComponent.size.y + 20);
+    _hintText.position = Vector2(size.x / 2, gridComponent.position.y + boardH + 20);
     _hintText.boxConfig = _hintText.boxConfig.copyWith(maxWidth: hintMaxWidth);
 
     _layoutBoosterRow();
@@ -227,7 +256,7 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
           : (delta.y > 0 ? Direction.down : Direction.up);
       events = session.swipe(dir);
     } else {
-      final local = endPos - gridComponent.position;
+      final local = gridComponent.toLocal(endPos);
       const step = GridComponent.cellSize + GridComponent.spacing;
       final col = (local.x / step).floor();
       final row = (local.y / step).floor();
@@ -334,7 +363,9 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     }
 
     if (_energyBlocked) {
-      _energyRefillLabel.text = 'Hết năng lượng — chạm đây để nạp ($energyRefillGemCost 💎)';
+      final wait = saveManager.timeUntilNextEnergy;
+      final minutes = (wait.inSeconds / 60).ceil();
+      _energyRefillLabel.text = '⚡ Hết năng lượng — hồi sau $minutes phút, hoặc chạm để nạp ngay ($energyRefillGemCost 💎)';
       _undoLabel.text = _blank;
       _shuffleLabel.text = _blank;
       _extraMovesLabel.text = _blank;
@@ -357,6 +388,15 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     final rowWidth = size.x - 2 * _boosterMargin;
     final rowRect = Rect.fromLTWH(_boosterMargin, _boosterRowY - 6, rowWidth, _boosterRowHeight);
     _buttons.clear();
+
+    // Always tappable — regardless of energy/busy/win-lose state — so the
+    // player is never stuck on the board with no way back.
+    if (onHome != null) {
+      _buttons.add(
+        _Button(Rect.fromLTWH(size.x - 12 - _homeButtonWidth, 4, _homeButtonWidth, _homeButtonHeight), onHome!),
+      );
+    }
+
     if (_energyBlocked) {
       _buttons.add(_Button(rowRect, _refillEnergy));
     } else {

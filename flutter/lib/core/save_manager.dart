@@ -138,6 +138,15 @@ class SaveManager {
     _persist();
   }
 
+  /// Credits coins directly — used today only by [ShopDialog]'s simulated
+  /// purchase buttons (lib/widgets/shop_dialog.dart). When a real payment
+  /// gateway/IAP is wired in, its purchase-success callback should call this
+  /// (after verifying the receipt), not the UI layer.
+  void addCoins(int amount) {
+    data.coins += amount;
+    _persist();
+  }
+
   bool spendGems(int amount) {
     if (data.gems < amount) return false;
     data.gems -= amount;
@@ -218,6 +227,13 @@ class SaveManager {
   int levelStars(String levelId) => data.levelStars[levelId] ?? 0;
 
   bool isCooked(String chapterId) => data.cooked.contains(chapterId);
+
+  /// A property (lib/data/properties.dart) unlocks exactly when its first
+  /// chapter does — its chapters are a contiguous slice of the same flat
+  /// `chapters` list [isChapterUnlocked] already sequences, so no new state.
+  bool isPropertyUnlocked(PropertyDef property) => isChapterUnlocked(property.chapterIds.first);
+
+  bool isPropertyDone(PropertyDef property) => property.chapterIds.every(isCooked);
 
   bool hasSeenScene(String sceneId) => data.seenScenes.contains(sceneId);
 

@@ -1247,3 +1247,44 @@ Dùng đúng khuôn toạ độ §17.0. 2 board đầu có vật cản cố đ�
 ```
 *(1 khung hình mẫu ngẫu nhiên — bàn lớn hơn chỉ để chứa đủ 3 loại tile spawn cùng lúc, không có vùng cố
 định theo chain, đúng cách tính spawn-weight board-wide đã dùng ở Chó giữ trại)*
+
+---
+
+## 20. Sim moveLimit — công cụ mới, đã chạy cho Hồi 1
+
+Mọi moveLimit trong tài liệu này (§14-§19) được ghi "chưa chạy sim" tại thời điểm viết — điều đó **đã hết
+đúng cho Hồi 1** (23 màn Flutter mới: Vườn dừa/Bò sữa/Vườn rau củ) kể từ khi user báo "màn 2 chơi không qua
+được" và yêu cầu 1 engine tự tính khả thi.
+
+- TS gốc đã có `sim/simulate.ts` (`npm run sim`, bot greedy 1-ply-lookahead) nhưng **không biết gì về vật
+  cản** (Hư hao chỉ tồn tại bên Flutter) nên không dùng trực tiếp được cho các màn mới.
+- Cổng sang `flutter/tool/simulate.dart` — cùng thuật toán (score theo tiến độ objective + giá trị tile +
+  ô trống, bot 1-ply-lookahead, 200+ trial/màn có seed riêng), chạy thẳng trên `GameSession` thật của
+  Flutter nên phản ánh đúng cả vật cản. Chạy bằng `dart run tool/simulate.dart [số trial]` từ thư mục
+  `flutter/`.
+- Lần chạy đầu phát hiện 1 bug thật trong chính con bot (không phải trong game): bot chấm điểm 1 lượt vuốt
+  "không làm gì" (không tốn lượt) cao hơn 1 lượt thật (vì lượt thật luôn sinh thêm 1 tile tier-1, bị heuristic
+  "thưởng ô trống" trừ điểm nhiều hơn phần thưởng nó nhận được) — bot vì vậy đứng im vô hạn thay vì chơi
+  tiếp. Sau khi sửa (chỉ chấp nhận lượt "không làm gì" khi không còn lựa chọn nào khác), level 1-1..1-4 lên
+  đúng 100% như target TS ("ch.1 ≈ 100%"), xác nhận công cụ đáng tin.
+- Sau khi công cụ đáng tin, phát hiện Vườn dừa/Bò sữa/Vườn rau củ **thật sự undertuned nặng** ở các màn
+  cuối chương — ví dụ 2c-4 (Cây trưởng thành) chỉ 4% thắng, 2c-5/2d-9/2v-9 (boss) gần như không thắng nổi
+  (0-3%). Đây chính là màn user báo không qua được. Đã tăng moveLimit các màn này (xem `levels.dart`), chạy
+  lại tới khi màn thường ≥83%, boss ≥68% (khớp target TS "bosses ≈ 70%"). Bảng trước/sau:
+
+| id | trước | sau | win-rate sau |
+|---|---|---|---|
+| 2c-4 | 36 | 50 | 89% |
+| 2c-5 (boss) | 52 | 88 | 86% |
+| 2d-6 | 38 | 46 | 94% |
+| 2d-7 | 42 | 50 | 99% |
+| 2d-8 | 46 | 58 | 98% |
+| 2d-9 (boss) | 58 | 92 | 83% |
+| 2v-6 | 32 | 40 | 84% |
+| 2v-7 | 36 | 44 | 96% |
+| 2v-8 | 38 | 48 | 88% |
+| 2v-9 (boss) | 48 | 85 | 92% |
+
+Hồi 2 gốc (2-1..2-5, dữ liệu TS đã tune sẵn) không đổi — win-rate 73-100% đã nằm trong khoảng target cũ.
+Hồi 3-8 (toàn bộ backlog §17.3/§18) sẽ cần chạy lại công cụ này trước khi lên code, đúng như mọi nơi trong
+tài liệu đã nhắc "bắt buộc sim trước khi code số liệu".

@@ -9,6 +9,7 @@ import '../data/chapters.dart' as chapter_data;
 import '../data/levels.dart' as level_data;
 import '../data/scenes.dart' as scene_data;
 import '../game/farm_merge_game.dart';
+import '../widgets/energy_blocked_dialog.dart';
 import '../widgets/level_intro_dialog.dart';
 import '../widgets/level_result_dialog.dart';
 import '../widgets/scene_dialog.dart';
@@ -27,8 +28,8 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late final FarmMergeGame _game;
-  bool _introShown = false;
+  FarmMergeGame? _game;
+  bool _startShown = false;
 
   LevelConfig get _level => level_data.levels[widget.levelId]!;
   ChainDef get _chain => chain_data.chains[_level.chainId]!;
@@ -37,13 +38,40 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _game = FarmMergeGame(saveManager: widget.saveManager, levelId: widget.levelId, onLevelEnd: _onLevelEnd);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showIntro());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
   }
 
-  Future<void> _showIntro() async {
-    if (!mounted || _introShown) return;
-    _introShown = true;
+  /// Checks energy *before* ever building the board — previously
+  /// FarmMergeGame's own onLoad() spent energy and set an internal blocked
+  /// flag independent of anything this screen did, so refilling energy from
+  /// a dialog shown after the board was already built couldn't un-stick it.
+  /// Now: no energy, no board — just this screen's own dialog, which is the
+  /// single source of truth and always offers a way out.
+  Future<void> _start() async {
+    if (!mounted || _startShown) return;
+    _startShown = true;
+
+    if (!widget.saveManager.hasEnergy) {
+      final refilled = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => EnergyBlockedDialog(saveManager: widget.saveManager),
+      );
+      if (!mounted) return;
+      if (refilled != true) {
+        Navigator.of(context).pop();
+        return;
+      }
+    }
+
+    setState(() {
+      _game = FarmMergeGame(
+        saveManager: widget.saveManager,
+        levelId: widget.levelId,
+        onLevelEnd: _onLevelEnd,
+        onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      );
+    });
     await _maybeShowChapterScene();
     if (!mounted) return;
     await showDialog<void>(
@@ -98,9 +126,13 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final game = _game;
     return Scaffold(
       backgroundColor: const Color(0xFF2E3A23),
-      body: SafeArea(child: GameWidget(game: _game)),
+      // Blank until energy is confirmed available (see _start) — the
+      // EnergyBlockedDialog is the only thing shown over this in that case,
+      // so there's never an unplayable board underneath it.
+      body: SafeArea(child: game == null ? const SizedBox.shrink() : GameWidget(game: game)),
     );
   }
 }

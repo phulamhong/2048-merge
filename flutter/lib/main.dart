@@ -4,7 +4,7 @@ import 'core/save_manager.dart';
 import 'core/shared_prefs_storage.dart';
 import 'data/chapters.dart' as chapter_data;
 import 'data/levels.dart' as level_data;
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 
 /// Lets [HomeScreen] know whenever it becomes the visible route again — see
 /// its `didPopNext` for why this is needed instead of just awaiting the
@@ -29,7 +29,7 @@ class FarmMergeApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xFF588157)),
       navigatorObservers: [routeObserver],
-      home: HomeScreen(saveManager: saveManager),
+      home: MainShell(saveManager: saveManager),
     );
   }
 }
