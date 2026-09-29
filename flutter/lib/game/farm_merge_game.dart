@@ -20,6 +20,10 @@ const extraMovesCost = 25;
 const extraMovesAmount = 5;
 const energyRefillGemCost = 20;
 
+/// Gems, not coins — a rescue tool for a stuck heavy obstacle, not a
+/// routine action, so priced like the (also gem-priced) energy refill.
+const repairKitCost = 15;
+
 /// Stand-in for "this wrapping label has nothing to show right now". A truly
 /// empty string makes `TextBoxComponent` lay out zero lines, which computes a
 /// zero-height image and crashes `toImageSafe` ("Invalid image dimensions");
@@ -62,6 +66,7 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
   late TextBoxComponent _undoLabel;
   late TextBoxComponent _shuffleLabel;
   late TextBoxComponent _extraMovesLabel;
+  late TextBoxComponent _repairKitLabel;
   late TextBoxComponent _hintText;
   final _objectiveIcons = <ObjectiveIconComponent>[];
 
@@ -93,6 +98,7 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     _undoLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
     _shuffleLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
     _extraMovesLabel = _wrappingLabel(color: Colors.lightGreenAccent, fontSize: 12);
+    _repairKitLabel = _wrappingLabel(color: Colors.orangeAccent, fontSize: 12);
     _hintText = _wrappingLabel(color: Colors.white54, fontSize: 13);
     addAll([
       _titleText,
@@ -102,6 +108,7 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
       _undoLabel,
       _shuffleLabel,
       _extraMovesLabel,
+      _repairKitLabel,
       _hintText,
     ]);
 
@@ -149,16 +156,27 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     _hintText.position = Vector2(size.x / 2, gridComponent.position.y + gridComponent.size.y + 20);
     _hintText.boxConfig = _hintText.boxConfig.copyWith(maxWidth: hintMaxWidth);
 
+    _layoutBoosterRow();
+  }
+
+  /// Lays out the booster row's labels for however many columns currently
+  /// apply (1 while blocked on energy, else 3 or 4 — the repair kit column
+  /// only exists while a heavy obstacle is on the board). Called from
+  /// [_layout] on resize and from [_refreshHud] every turn, since
+  /// [hasHeavyObstacle] can flip mid-level, unlike the rest of the layout.
+  void _layoutBoosterRow() {
     final rowWidth = size.x - 2 * _boosterMargin;
-    final colW = rowWidth / 3;
     _energyRefillLabel.position = Vector2(size.x / 2, _boosterRowY);
     _energyRefillLabel.boxConfig = _energyRefillLabel.boxConfig.copyWith(maxWidth: rowWidth);
-    _undoLabel.position = Vector2(_boosterMargin + colW * 0.5, _boosterRowY);
-    _undoLabel.boxConfig = _undoLabel.boxConfig.copyWith(maxWidth: colW - 8);
-    _shuffleLabel.position = Vector2(_boosterMargin + colW * 1.5, _boosterRowY);
-    _shuffleLabel.boxConfig = _shuffleLabel.boxConfig.copyWith(maxWidth: colW - 8);
-    _extraMovesLabel.position = Vector2(_boosterMargin + colW * 2.5, _boosterRowY);
-    _extraMovesLabel.boxConfig = _extraMovesLabel.boxConfig.copyWith(maxWidth: colW - 8);
+
+    final cols = session.hasHeavyObstacle ? 4 : 3;
+    final colW = rowWidth / cols;
+    final labels = [_undoLabel, _shuffleLabel, _extraMovesLabel, if (cols == 4) _repairKitLabel];
+    for (var i = 0; i < labels.length; i++) {
+      labels[i].position = Vector2(_boosterMargin + colW * (i + 0.5), _boosterRowY);
+      labels[i].boxConfig = labels[i].boxConfig.copyWith(maxWidth: colW - 8);
+    }
+    if (cols == 3) _repairKitLabel.text = _blank;
 
     _rebuildBoosterButtons();
   }
@@ -289,6 +307,13 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     _refreshHud();
   }
 
+  void _useRepairKit() {
+    if (!session.hasHeavyObstacle) return;
+    if (!saveManager.spendGems(repairKitCost)) return;
+    session.repairAnyHeavy();
+    _syncAfterBooster();
+  }
+
   void _syncAfterBooster() {
     gridComponent.hardSync();
     _refreshHud();
@@ -313,13 +338,15 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
       _undoLabel.text = _blank;
       _shuffleLabel.text = _blank;
       _extraMovesLabel.text = _blank;
+      _repairKitLabel.text = _blank;
     } else {
       _energyRefillLabel.text = _blank;
       _undoLabel.text = '↩ Hoàn tác\n($undoCost xu)';
       _shuffleLabel.text = '🔀 Xáo bàn\n($shuffleCost xu)';
       _extraMovesLabel.text = '➕ $extraMovesAmount lượt\n($extraMovesCost xu)';
+      if (session.hasHeavyObstacle) _repairKitLabel.text = '🛠 Sửa chữa\n($repairKitCost 💎)';
     }
-    _rebuildBoosterButtons();
+    _layoutBoosterRow();
   }
 
   /// Booster tap zones are a fixed row geometry, independent of how the
@@ -333,11 +360,11 @@ class FarmMergeGame extends FlameGame with MultiTouchDragDetector {
     if (_energyBlocked) {
       _buttons.add(_Button(rowRect, _refillEnergy));
     } else {
-      final colW = rowWidth / 3;
-      _buttons
-        ..add(_Button(Rect.fromLTWH(rowRect.left, rowRect.top, colW, rowRect.height), _useUndo))
-        ..add(_Button(Rect.fromLTWH(rowRect.left + colW, rowRect.top, colW, rowRect.height), _useShuffle))
-        ..add(_Button(Rect.fromLTWH(rowRect.left + colW * 2, rowRect.top, colW, rowRect.height), _useExtraMoves));
+      final callbacks = [_useUndo, _useShuffle, _useExtraMoves, if (session.hasHeavyObstacle) _useRepairKit];
+      final colW = rowWidth / callbacks.length;
+      for (var i = 0; i < callbacks.length; i++) {
+        _buttons.add(_Button(Rect.fromLTWH(rowRect.left + colW * i, rowRect.top, colW, rowRect.height), callbacks[i]));
+      }
     }
   }
 

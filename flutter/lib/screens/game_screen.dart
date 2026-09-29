@@ -7,9 +7,11 @@ import '../core/types.dart';
 import '../data/chains.dart' as chain_data;
 import '../data/chapters.dart' as chapter_data;
 import '../data/levels.dart' as level_data;
+import '../data/scenes.dart' as scene_data;
 import '../game/farm_merge_game.dart';
 import '../widgets/level_intro_dialog.dart';
 import '../widgets/level_result_dialog.dart';
+import '../widgets/scene_dialog.dart';
 
 /// Hosts the Flame board for exactly one level, plus the two Flutter dialogs
 /// around it: the target screen shown before the first move, and the result
@@ -42,11 +44,26 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> _showIntro() async {
     if (!mounted || _introShown) return;
     _introShown = true;
+    await _maybeShowChapterScene();
+    if (!mounted) return;
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (_) => LevelIntroDialog(level: _level, chain: _chain, chapter: _chapter),
     );
+  }
+
+  /// Shows the chapter's [ChapterDef.introSceneId] scene once, the first
+  /// time the player reaches that chapter's first level.
+  Future<void> _maybeShowChapterScene() async {
+    final sceneId = _chapter.introSceneId;
+    if (sceneId == null) return;
+    if (_chapter.levelIds.first != widget.levelId) return;
+    if (widget.saveManager.hasSeenScene(sceneId)) return;
+    final scene = scene_data.scenes[sceneId];
+    if (scene == null) return;
+    await showDialog<void>(context: context, barrierDismissible: false, builder: (_) => SceneDialog(scene: scene));
+    widget.saveManager.markSceneSeen(sceneId);
   }
 
   void _onLevelEnd(GameSession session, RecordWinResult? result) {

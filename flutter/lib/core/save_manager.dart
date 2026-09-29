@@ -28,6 +28,7 @@ class SaveData {
   Map<String, int> inventory;
   List<String> cooked;
   List<String> decor;
+  List<String> seenScenes;
   int coins;
   int gems;
   int energy;
@@ -43,6 +44,7 @@ class SaveData {
     Map<String, int>? inventory,
     List<String>? cooked,
     List<String>? decor,
+    List<String>? seenScenes,
     this.coins = 0,
     this.gems = 0,
     int? energy,
@@ -52,6 +54,7 @@ class SaveData {
        inventory = inventory ?? {},
        cooked = cooked ?? [],
        decor = decor ?? [],
+       seenScenes = seenScenes ?? [],
        energy = energy ?? (energyMax);
 
   factory SaveData.empty() => SaveData();
@@ -65,6 +68,7 @@ class SaveData {
       inventory: {for (final e in (json['inventory'] as Map<String, dynamic>? ?? {}).entries) e.key: e.value as int},
       cooked: List<String>.from(json['cooked'] as List? ?? const []),
       decor: List<String>.from(json['decor'] as List? ?? const []),
+      seenScenes: List<String>.from(json['seenScenes'] as List? ?? const []),
       coins: json['coins'] as int? ?? 0,
       gems: json['gems'] as int? ?? 0,
       energy: json['energy'] as int?,
@@ -79,6 +83,7 @@ class SaveData {
     'inventory': inventory,
     'cooked': cooked,
     'decor': decor,
+    'seenScenes': seenScenes,
     'coins': coins,
     'gems': gems,
     'energy': energy,
@@ -213,6 +218,14 @@ class SaveManager {
   int levelStars(String levelId) => data.levelStars[levelId] ?? 0;
 
   bool isCooked(String chapterId) => data.cooked.contains(chapterId);
+
+  bool hasSeenScene(String sceneId) => data.seenScenes.contains(sceneId);
+
+  void markSceneSeen(String sceneId) {
+    if (data.seenScenes.contains(sceneId)) return;
+    data.seenScenes.add(sceneId);
+    _persist();
+  }
 
   /// Ingredients are granted only on the first clear; replays can only raise stars.
   RecordWinResult recordWin(String levelId, int stars, int levelCoins) {

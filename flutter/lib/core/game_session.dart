@@ -65,6 +65,8 @@ class GameSession {
 
   bool isHarvestable(Tile tile) => tracker.match(tile) != null;
 
+  bool get hasHeavyObstacle => board.obstacles.values.any((o) => o.heavy);
+
   List<GameEvent> swipe(Direction dir) {
     if (status != SessionStatus.playing || movesLeft <= 0) return const [];
     final snapshot = clone();
@@ -80,6 +82,7 @@ class GameSession {
       events.add(MergeEvent(a: m.a, b: m.b, result: m.result.copy()));
     }
     movesUsed++;
+    _applyObstacleHits(dir, res, events);
 
     for (final m in res.merges) {
       _autoHarvestIfOverflow(m.result, events);
@@ -93,6 +96,7 @@ class GameSession {
       _spawn(1, events);
     }
     _periodicSpawn(events);
+    _decayTick(events);
     _autoHarvestMatches(events);
     if (_checkWin()) return events;
     _checkLose();
@@ -127,9 +131,21 @@ class GameSession {
     final events = <GameEvent>[SplitEvent(kept: res.kept.copy(), spawned: res.spawned.copy())];
     movesUsed++;
     _periodicSpawn(events);
+    _decayTick(events);
     _autoHarvestMatches(events);
     if (!_checkWin()) _checkLose();
     return events;
+  }
+
+  /// Booster: unconditionally clears 1 heavy obstacle (the player doesn't
+  /// pick which — there's rarely more than one on screen). Returns false if
+  /// there's none to clear, so the caller can skip spending currency.
+  bool repairAnyHeavy() {
+    if (status != SessionStatus.playing) return false;
+    final heavy = board.obstacles.entries.where((e) => e.value.heavy).map((e) => e.key).firstOrNull;
+    if (heavy == null) return false;
+    board.repair(heavy);
+    return true;
   }
 
   /// Booster: spend +[n] moves. Also revives a session that had just lost by
@@ -201,6 +217,49 @@ class GameSession {
   void _periodicSpawn(List<GameEvent> events) {
     final every = level.spawn.bigTileEvery;
     if (every != null && movesUsed % every.turns == 0) _spawn(every.tier, events);
+  }
+
+  /// After a swipe, registers 1 hit on every obstacle that just got a tile
+  /// pressed up against it from the direction the swipe came from — the
+  /// tile immediately upstream (opposite the swipe direction) must be one
+  /// that moved or was created by a merge *this* turn, so simply resting
+  /// next to an obstacle from an earlier turn doesn't count again. At most 1
+  /// hit per obstacle per swipe, regardless of how many tiles ended up
+  /// against it — see plan note in docs/GAME_DESIGN_ACTS.md §13 / the
+  /// implementation plan: this is an assumption to confirm during playtest.
+  void _applyObstacleHits(Direction dir, SlideResult res, List<GameEvent> events) {
+    if (board.obstacles.isEmpty) return;
+    final activeUids = {...res.moves.map((m) => m.uid), ...res.merges.map((m) => m.result.uid)};
+    final dr = switch (dir) { Direction.up => 1, Direction.down => -1, _ => 0 };
+    final dc = switch (dir) { Direction.left => 1, Direction.right => -1, _ => 0 };
+    for (final pos in board.obstacles.keys.toList()) {
+      final tile = board.get(pos.row + dr, pos.col + dc);
+      if (tile == null || !activeUids.contains(tile.uid)) continue;
+      final cleared = board.hitObstacle(pos);
+      events.add(cleared ? ObstacleClearEvent(pos: pos) : ObstacleHitEvent(pos: pos, hits: board.obstacles[pos]!.hits));
+    }
+  }
+
+  /// Every [DecaySpawnConfig.everyTurns] moves: spawns a new light obstacle
+  /// if under the level's cap, otherwise escalates 2 existing light ones
+  /// into 1 heavy one (mirrors [_periodicSpawn]'s turn-counter pattern).
+  void _decayTick(List<GameEvent> events) {
+    final cfg = level.decaySpawn;
+    if (cfg == null || movesUsed == 0 || movesUsed % cfg.everyTurns != 0) return;
+    if (board.obstacles.length < cfg.max) {
+      final empty = board.emptyCells();
+      if (empty.isEmpty) return;
+      final pos = _rng.pick(empty);
+      board.spawnObstacle(pos);
+      events.add(ObstacleSpawnEvent(pos: pos));
+      return;
+    }
+    final light = board.obstacles.entries.where((e) => !e.value.heavy).map((e) => e.key).toList();
+    if (light.length < 2) return;
+    final a = light[0];
+    final b = light[1];
+    board.escalate(a, b, a);
+    events.add(ObstacleEscalateEvent(clearedA: a, clearedB: b, heavyPos: a));
   }
 
   bool _checkWin() {

@@ -83,6 +83,27 @@ class BigTileEvery {
   const BigTileEvery({required this.turns, required this.tier});
 }
 
+/// Number of swipe-hits an obstacle needs before it clears itself. Fixed
+/// per §13 GAME_DESIGN_ACTS.md — not configurable per level/obstacle.
+const decayHitsToClear = 5;
+
+/// Mutable per-cell obstacle state ("Hư hao"/decay for now — GAME_DESIGN.md
+/// §4.1 has 3 more obstacle kinds planned for later Acts; this type is kept
+/// generic enough to grow a `kind` field then without a rewrite).
+class ObstacleCell {
+  int hits;
+  bool heavy;
+  ObstacleCell({this.hits = 0, this.heavy = false});
+}
+
+/// Controls how often a new decay obstacle spawns on an unsolved board, and
+/// how many can be alive at once before 2 escalate into 1 "heavy" one.
+class DecaySpawnConfig {
+  final int everyTurns;
+  final int max;
+  const DecaySpawnConfig({required this.everyTurns, required this.max});
+}
+
 class SpawnConfig {
   final int perTurn;
   final double? doubleChance;
@@ -106,6 +127,7 @@ class LevelConfig {
   final String producesIngredient;
   final bool boss;
   final String? hint;
+  final DecaySpawnConfig? decaySpawn;
 
   const LevelConfig({
     required this.id,
@@ -123,6 +145,7 @@ class LevelConfig {
     required this.producesIngredient,
     this.boss = false,
     this.hint,
+    this.decaySpawn,
   });
 }
 
@@ -163,12 +186,18 @@ class ChapterDef {
   final RecipeDef recipe;
   final List<String> levelIds;
   final List<DecorDef> unlocks;
+
+  /// Id of a [SceneDef] (lib/data/scenes.dart) to show once, before the
+  /// chapter's first level — null means no NPC scene for this chapter.
+  final String? introSceneId;
+
   const ChapterDef({
     required this.id,
     required this.name,
     required this.recipe,
     required this.levelIds,
     required this.unlocks,
+    this.introSceneId,
   });
 }
 
@@ -231,4 +260,27 @@ class InvalidEvent extends GameEvent {
 
 class NoChangeEvent extends GameEvent {
   const NoChangeEvent();
+}
+
+class ObstacleSpawnEvent extends GameEvent {
+  final Pos pos;
+  const ObstacleSpawnEvent({required this.pos});
+}
+
+class ObstacleHitEvent extends GameEvent {
+  final Pos pos;
+  final int hits;
+  const ObstacleHitEvent({required this.pos, required this.hits});
+}
+
+class ObstacleClearEvent extends GameEvent {
+  final Pos pos;
+  const ObstacleClearEvent({required this.pos});
+}
+
+class ObstacleEscalateEvent extends GameEvent {
+  final Pos clearedA;
+  final Pos clearedB;
+  final Pos heavyPos;
+  const ObstacleEscalateEvent({required this.clearedA, required this.clearedB, required this.heavyPos});
 }

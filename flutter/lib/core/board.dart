@@ -37,6 +37,7 @@ class Board {
   final ChainDef chain;
   final Rng rng;
   late final List<List<Tile?>> _cells;
+  final Map<Pos, ObstacleCell> obstacles = {};
   int _nextUid = 1;
 
   Board(this.rows, this.cols, this.chain, this.rng) {
@@ -53,7 +54,7 @@ class Board {
     final out = <Pos>[];
     for (var row = 0; row < rows; row++) {
       for (var col = 0; col < cols; col++) {
-        if (_cells[row][col] == null) out.add(Pos(row, col));
+        if (_cells[row][col] == null && !obstacles.containsKey(Pos(row, col))) out.add(Pos(row, col));
       }
     }
     return out;
@@ -83,31 +84,58 @@ class Board {
     final moves = <MoveInfo>[];
     final merges = <MergeInfo>[];
     for (final line in _linesFor(dir)) {
-      final lineTiles = [for (final p in line) _cells[p.row][p.col]];
-      final slots = resolveLine<Tile>(lineTiles, canMerge);
-
-      for (final p in line) {
-        _cells[p.row][p.col] = null;
-      }
-
-      for (var idx = 0; idx < slots.length; idx++) {
-        final to = line[idx];
-        final slot = slots[idx];
-        switch (slot) {
-          case SingleSlot<Tile>(:final tile):
-            if (tile.row != to.row || tile.col != to.col) {
-              moves.add(MoveInfo(uid: tile.uid, to: to));
-            }
-            tile.row = to.row;
-            tile.col = to.col;
-            _cells[to.row][to.col] = tile;
-          case MergedSlot<Tile>(:final a, :final b):
-            final result = createTile(a.tier + 1, to, BornFrom.merge);
-            merges.add(MergeInfo(a: a.uid, b: b.uid, result: result));
-        }
+      for (final segment in _segmentsAround(line)) {
+        _slideSegment(segment, moves, merges);
       }
     }
     return SlideResult(moves: moves, merges: merges);
+  }
+
+  void _slideSegment(List<Pos> segment, List<MoveInfo> moves, List<MergeInfo> merges) {
+    final lineTiles = [for (final p in segment) _cells[p.row][p.col]];
+    final slots = resolveLine<Tile>(lineTiles, canMerge);
+
+    for (final p in segment) {
+      _cells[p.row][p.col] = null;
+    }
+
+    for (var idx = 0; idx < slots.length; idx++) {
+      final to = segment[idx];
+      final slot = slots[idx];
+      switch (slot) {
+        case SingleSlot<Tile>(:final tile):
+          if (tile.row != to.row || tile.col != to.col) {
+            moves.add(MoveInfo(uid: tile.uid, to: to));
+          }
+          tile.row = to.row;
+          tile.col = to.col;
+          _cells[to.row][to.col] = tile;
+        case MergedSlot<Tile>(:final a, :final b):
+          final result = createTile(a.tier + 1, to, BornFrom.merge);
+          merges.add(MergeInfo(a: a.uid, b: b.uid, result: result));
+      }
+    }
+  }
+
+  /// Splits one full line into the sub-segments tiles actually compact
+  /// within — an obstacle cell is a fixed wall a slide cannot cross, so each
+  /// maximal run of non-obstacle positions between walls (or edges) is its
+  /// own segment. A line with no obstacles is exactly one segment, matching
+  /// the pre-obstacle behaviour.
+  List<List<Pos>> _segmentsAround(List<Pos> line) {
+    if (obstacles.isEmpty) return [line];
+    final segments = <List<Pos>>[];
+    var current = <Pos>[];
+    for (final p in line) {
+      if (obstacles.containsKey(p)) {
+        if (current.isNotEmpty) segments.add(current);
+        current = [];
+      } else {
+        current.add(p);
+      }
+    }
+    if (current.isNotEmpty) segments.add(current);
+    return segments;
   }
 
   /// Free neighbour a split would use (right, down, left, up), or null.
@@ -115,7 +143,8 @@ class Board {
     for (final d in _splitDirections) {
       final row = tile.row + d.row;
       final col = tile.col + d.col;
-      if (_inBounds(row, col) && _cells[row][col] == null) return Pos(row, col);
+      final pos = Pos(row, col);
+      if (_inBounds(row, col) && _cells[row][col] == null && !obstacles.containsKey(pos)) return pos;
     }
     return null;
   }
@@ -177,7 +206,48 @@ class Board {
     for (final t in tiles()) {
       copy._cells[t.row][t.col] = t.copy();
     }
+    for (final entry in obstacles.entries) {
+      copy.obstacles[entry.key] = ObstacleCell(hits: entry.value.hits, heavy: entry.value.heavy);
+    }
     return copy;
+  }
+
+  /// Places a new light (not-yet-escalated) obstacle at [pos]. [pos] must be
+  /// empty and not already an obstacle — callers (GameSession) pick it from
+  /// [emptyCells].
+  void spawnObstacle(Pos pos) {
+    obstacles[pos] = ObstacleCell();
+  }
+
+  /// Registers 1 swipe-hit on the obstacle at [pos]. Returns true if that hit
+  /// cleared it (reached [decayHitsToClear] — already removed from
+  /// [obstacles] when this returns true). No-op (returns false) if there's no
+  /// obstacle there or it's already heavy (heavy obstacles only clear via
+  /// [repair]).
+  bool hitObstacle(Pos pos) {
+    final cell = obstacles[pos];
+    if (cell == null || cell.heavy) return false;
+    cell.hits++;
+    if (cell.hits >= decayHitsToClear) {
+      obstacles.remove(pos);
+      return true;
+    }
+    return false;
+  }
+
+  /// Removes the 2 given light obstacles and places 1 heavy obstacle at
+  /// [heavyPos] (one of the 2 — GameSession picks which).
+  void escalate(Pos a, Pos b, Pos heavyPos) {
+    obstacles.remove(a);
+    obstacles.remove(b);
+    obstacles[heavyPos] = ObstacleCell(heavy: true);
+  }
+
+  /// Clears a heavy obstacle unconditionally (the "Bộ Sửa Chữa" booster).
+  /// No-op if [pos] isn't a heavy obstacle.
+  void repair(Pos pos) {
+    final cell = obstacles[pos];
+    if (cell != null && cell.heavy) obstacles.remove(pos);
   }
 
   String? _rollSkin(int tier) {

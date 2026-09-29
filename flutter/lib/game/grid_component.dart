@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 
 import '../core/game_session.dart';
 import '../core/types.dart';
+import 'obstacle_component.dart';
 import 'slot_component.dart';
 import 'tile_component.dart';
 import 'tile_look.dart';
@@ -19,6 +20,7 @@ class GridComponent extends PositionComponent {
   GameSession session;
   final _tiles = <int, TileComponent>{};
   final _slots = <SlotComponent>[];
+  final _obstacles = <Pos, ObstacleComponent>{};
 
   GridComponent({required this.session}) : super(anchor: Anchor.topLeft) {
     _rebuildSlots();
@@ -35,6 +37,10 @@ class GridComponent extends PositionComponent {
       s.removeFromParent();
     }
     _slots.clear();
+    for (final o in _obstacles.values) {
+      o.removeFromParent();
+    }
+    _obstacles.clear();
     _rebuildSlots();
     hardSync();
   }
@@ -89,6 +95,31 @@ class GridComponent extends PositionComponent {
     for (final uid in _tiles.keys.toList()) {
       if (!liveUids.contains(uid)) _removeTile(uid);
     }
+
+    final liveObstaclePos = <Pos>{};
+    for (final entry in session.board.obstacles.entries) {
+      liveObstaclePos.add(entry.key);
+      final existing = _obstacles[entry.key];
+      if (existing == null) {
+        _createObstacle(entry.key, entry.value.heavy, entry.value.hits);
+      } else {
+        existing.updateState(heavy: entry.value.heavy, hits: entry.value.hits);
+      }
+    }
+    for (final pos in _obstacles.keys.toList()) {
+      if (!liveObstaclePos.contains(pos)) _removeObstacle(pos);
+    }
+  }
+
+  ObstacleComponent _createObstacle(Pos pos, bool heavy, int hits) {
+    final comp = ObstacleComponent(size: Vector2.all(cellSize), position: _cellPosition(pos.row, pos.col), heavy: heavy, hits: hits);
+    _obstacles[pos] = comp;
+    add(comp);
+    return comp;
+  }
+
+  void _removeObstacle(Pos pos) {
+    _obstacles.remove(pos)?.removeFromParent();
   }
 
   /// Replays one turn's events as tweens, in the same 4 phases as the web
@@ -124,6 +155,13 @@ class GridComponent extends PositionComponent {
       } else if (e is InvalidEvent) {
         final t = _tiles[e.uid];
         if (t != null) popPhase.add(t.shake());
+      } else if (e is ObstacleHitEvent) {
+        final o = _obstacles[e.pos];
+        o?.updateState(heavy: false, hits: e.hits);
+        if (o != null) popPhase.add(o.shake());
+      } else if (e is ObstacleClearEvent) {
+        final o = _obstacles.remove(e.pos);
+        if (o != null) popPhase.add(o.clearOut().then((_) => o.removeFromParent()));
       }
     }
     await Future.wait(popPhase);
@@ -141,6 +179,14 @@ class GridComponent extends PositionComponent {
     for (final e in events) {
       if (e is SpawnEvent) {
         final comp = _createTile(e.tile.uid, _lookFor(e.tile.tier, e.tile.skinId), _cellPosition(e.tile.row, e.tile.col));
+        spawnPhase.add(comp.spawnIn());
+      } else if (e is ObstacleSpawnEvent) {
+        final comp = _createObstacle(e.pos, false, 0);
+        spawnPhase.add(comp.spawnIn());
+      } else if (e is ObstacleEscalateEvent) {
+        _removeObstacle(e.clearedA);
+        _removeObstacle(e.clearedB);
+        final comp = _createObstacle(e.heavyPos, true, 0);
         spawnPhase.add(comp.spawnIn());
       }
     }

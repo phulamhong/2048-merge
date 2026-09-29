@@ -25,8 +25,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Game screen: the level-intro dialog shows before the board is playable.
+    // Chapter 1 has an intro scene (docs/GAME_DESIGN_ACTS.md §19.1) shown
+    // once before the level-intro dialog — dismiss it first.
     expect(find.byType(GameWidget<FarmMergeGame>), findsOneWidget);
+    expect(find.text('Tiếp tục'), findsOneWidget);
+    await tester.tap(find.text('Tiếp tục'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Game screen: the level-intro dialog shows before the board is playable.
     expect(find.text('Bắt đầu'), findsOneWidget);
     expect(tester.takeException(), isNull);
 

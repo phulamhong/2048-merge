@@ -22,6 +22,7 @@ LevelConfig makeLevel({
   SpawnConfig spawn = const SpawnConfig(perTurn: 0),
   List<ObjectiveDef> objectives = const [ObjectiveDef(tier: 3, target: 1)],
   int moveLimit = 20,
+  DecaySpawnConfig? decaySpawn,
 }) {
   return LevelConfig(
     id: 'test',
@@ -36,6 +37,7 @@ LevelConfig makeLevel({
     objectives: objectives,
     moveLimit: moveLimit,
     producesIngredient: 'x',
+    decaySpawn: decaySpawn,
   );
 }
 
@@ -46,6 +48,7 @@ GameSession sessionWith(
   SpawnConfig spawn = const SpawnConfig(perTurn: 0),
   List<ObjectiveDef> objectives = const [ObjectiveDef(tier: 3, target: 1)],
   int moveLimit = 20,
+  DecaySpawnConfig? decaySpawn,
 }) {
   final initialTiles = <InitialTile>[
     for (var row = 0; row < layout.length; row++)
@@ -60,6 +63,7 @@ GameSession sessionWith(
     spawn: spawn,
     objectives: objectives,
     moveLimit: moveLimit,
+    decaySpawn: decaySpawn,
   );
   return GameSession(level, testChain, seed: 42);
 }

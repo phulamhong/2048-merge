@@ -1,8 +1,11 @@
 {
-  "updated_at": "2026-09-28T09:00:00Z",
-  "current_focus": "QUAN TRỌNG cho mọi phiên game-design: toàn bộ khung 'Vùng theo miền Việt Nam' (GAME_DESIGN.md §2/§2.1/§2.1a/§2.1b/§11/§12/§13) và 'Sổ tay Bà Năm'/4 phương án (STORY_CONCEPTS.md) ĐÃ BỊ THAY THẾ (2026-09-28, quyết định trực tiếp của user) — xem docs/GAME_DESIGN_ACTS.md. Cốt truyện mới: cô gái thành thị (tạm đặt tên 'Mai') thừa hưởng nông trại từ Bà Năm (đã mất, giữ lại làm người để lại di sản). Cấu trúc mới: Hồi (thay Vùng) → Chương → Màn, không giới hạn số Hồi trước — Hồi 1 Nông trại, Hồi 2 Ẩm thực Việt Nam (tái dùng ~100% nội dung Vùng 2 cũ ở §11 + §2.1b, chỉ đổi khung), Hồi 3 Nhà hàng quốc tế (mới, món Trung/Nhật/Hàn), Hồi 4 Cửa hàng thời trang (mới, quần áo/nón/giày dép), Hồi 5 Tiệm cà phê (mới, cà phê/trà sữa) — user yêu cầu thêm Hồi 4-5 ngay sau khi tôi viết xong Hồi 1-3. Cơ chế mới: chain có thể 'nối dài' qua nhiều Chương vượt trần tier 7 cũ (dùng initialTiles đã có sẵn trong engine + stages §4.2 GAME_DESIGN.md để chia nhỏ màn tier cao) — ví dụ mẫu: chain dừa 11 tier, hạt(2)→...→trái(256, hết Hồi 1)→phơi khô(512)→ngâm(1024)→mứt(2048, Hồi 2). §3-§10 của GAME_DESIGN.md (cơ chế lõi: vật cản/stages/tier/economy/kiến trúc) VẪN GIỮ NGUYÊN, không đổi gì. Cập nhật tiếp (game-design-19): tên chốt 'Mai', 5 NPC theo Hồi (§11), cốt truyện chi tiết (§12), vật cản mới 'Hư hao' (§13 — sinh mỗi 10 lượt nếu chưa thắng, dọn sau 5 va chạm, 2 ô hư leo thang thành 1 hư nặng chỉ dọn bằng booster mới 'Bộ Sửa Chữa'), và Hồi 1 chi tiết (§14 — Chương 'Vườn dừa' 5 màn). Phát hiện quan trọng: objective tier 8 KHÔNG khả thi trong 1 màn thường (~166 lượt theo công thức §7) — 'Vườn dừa' chỉ yêu cầu tới tier 6, đẩy nhu cầu `stages` lên sớm hơn dự kiến. Toàn bộ CHƯA commit — chỉ là thiết kế/nội dung, GAME_DESIGN_ACTS.md còn vài câu hỏi mở (§9) chưa quyết (giữ Tết dạng nào, thứ tự làm Hồi 4-5, món 3 nước Hồi 3, chỗ giới thiệu Hư hao).",
-  "next_id": 21,
-  "domains": ["game-design", "flutter-app"],
+  "updated_at": "2026-09-29T00:00:00Z",
+  "current_focus": "Hồi 1 bản gốc (4 chương: Trại gà nhỏ/Vườn dừa/Bò sữa/Vườn rau củ) giờ THỰC SỰ SỐNG trong code Flutter (flutter/lib/), không chỉ docs — xem flutter-app-1. Engine vật cản Hư hao (ObstacleCell/DecaySpawnConfig, Board.slide cắt đoạn quanh vật cản, GameSession hit/decay-tick/repair, ObstacleComponent) và engine thoại NPC (SceneDef/SceneDialog/ChapterDef.introSceneId/SaveManager.seenScenes) đều mới, dùng chung được cho mọi Hồi sau. flutter analyze sạch, flutter test 91/91 pass. CHƯA chạy flutter run thật (user cần tự kiểm tra, đặc biệt luật \"1 hit/lượt vuốt\" là giả định thiết kế chưa playtest — xem game_session.dart._applyObstacleHits). Hồi 1 v2 (§18, 18 chương thêm: trái cây/mứt/heo/chó giữ trại/phiên chợ) VẪN chỉ là docs — cần engine nhiều-chain-1-bàn riêng (Board/GameSession nhận nhiều ChainDef), không có trong lượt này. Hồi 3-8 (21 chương cũ, §17.3) và 3 vật cản còn lại (Đá/Cỏ dại/Băng/Lưới) cũng vẫn backlog thuần docs. Toàn bộ thay đổi từ commit 6391626 tới giờ (docs §15-19 + code Flutter mới) CHƯA commit.",
+  "next_id": 29,
+  "domains": [
+    "game-design",
+    "flutter-app"
+  ],
   "tasks": [
     {
       "id": "game-design-13",
@@ -100,7 +103,42 @@
       "title": "Chốt tên Mai + thêm NPC theo Hồi (§11), cốt truyện chi tiết mỗi Hồi (§12), thiết kế vật cản mới 'Hư hao' theo đúng cơ chế user mô tả (sinh mỗi 10 lượt, dọn sau 5 va chạm, 2 ô hư leo thang thành 1 ô hư nặng chỉ dọn được bằng công cụ riêng — §13), và nội dung/độ khó chi tiết Hồi 1 (Chương 'Trại gà nhỏ' tái dùng + Chương 'Vườn dừa' 5 màn mới — §14), viết vào docs/GAME_DESIGN_ACTS.md",
       "domain": "game-design",
       "status": "done",
-      "evidence": "Thêm §11-14 vào GAME_DESIGN_ACTS.md, đánh dấu resolved 2 câu hỏi mở cũ (tên nhân vật, có NPC không) ở §9. Phát hiện kỹ thuật quan trọng khi thiết kế §14: KHÔNG thể đặt objective tier 8 (trái dừa) cho 1 màn thường — theo công thức §7 GAME_DESIGN.md sẽ ra ~166 lượt, vượt xa nhịp 3-8 phút/màn — nên 5 màn 'Vườn dừa' chỉ yêu cầu tới tier 6, tier 7-8 đạt được qua overflow tự động khi chơi dư; tier 8 chỉ thật sự cần khi làm initialTiles cho Chương 'Mứt dừa' sau. Từ đó đề xuất đẩy `stages` lên làm sớm hơn (cùng đợt với Đá) thay vì Phase 3a như dự kiến cũ. Vật cản Hư hao thêm 1 booster mới 'Bộ Sửa Chữa' vào economy đã có. CHƯA commit, CHƯA chạy sim để xác nhận số liệu 'Vườn dừa'. Sửa 1 lỗi JSON tự gây ra khi edit tasks.json turn trước (thiếu key 'open_questions') — đã fix, verify lại bằng python3 -m json.tool."
+      "evidence": "Thêm §11-14 vào GAME_DESIGN_ACTS.md, đánh dấu resolved 2 câu hỏi mở cũ (tên nhân vật, có NPC không) ở §9. Phát hiện kỹ thuật quan trọng khi thiết kế §14: KHÔNG thể đặt objective tier 8 (trái dừa) cho 1 màn thường — theo công thức §7 GAME_DESIGN.md sẽ ra ~166 lượt, vượt xa nhịp 3-8 phút/màn — nên 5 màn 'Vườn dừa' chỉ yêu cầu tới tier 6, tier 7-8 đạt được qua overflow tự động khi chơi dư; tier 8 chỉ thật sự cần khi làm initialTiles cho Chương 'Mứt dừa' sau. Từ đó đề xuất đẩy `stages` lên làm sớm hơn (cùng đợt với Đá) thay vì Phase 3a như dự kiến cũ. Vật cản Hư hao thêm 1 booster mới 'Bộ Sửa Chữa' vào economy đã có. Đã commit trong 6391626 (kèm game-design-16/17/18 gộp chung 1 commit)."
+    },
+    {
+      "id": "game-design-20",
+      "title": "Giải thích Tết là gì cho user + đóng gói toàn bộ content/flow của GAME_DESIGN_ACTS.md thành 1 Artifact Design (canvas 5 artboard) để user xem trực quan trước khi quyết định tiếp",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Artifact 'Mai's Farm — Content & Flow' tại https://claude.ai/artifact/TS7UtfeeZt5tkpV9LbHpjL — 5 artboard: (1) Bìa/cốt truyện, (2) Cấu trúc 5 Hồi dạng flow ngang có mũi tên + ô '...' Hồi 6+ mở khi cần, (3) 5 NPC + nội dung từng Hồi dạng card dọc, (4) chain dừa 11 tier (2→2048) dạng bậc thang + 5 vật cản (nhấn mạnh Hư hao leo thang), (5) flow màn chơi Home→Mục tiêu→Chơi→Kết quả (đúng luồng đã code trong Flutter). Không đổi nội dung thiết kế, chỉ trực quan hoá GAME_DESIGN_ACTS.md hiện có — chưa cập nhật lại docs nếu user muốn sửa gì từ đây."
+    },
+    {
+      "id": "game-design-21",
+      "title": "Trả lời 5 câu hỏi chi tiết sản xuất cho CẢ 5 HỒI (không chỉ Hồi 1): số chương/màn dự tính, kích thước lưới mỗi chương, vật cản tương ứng, vật phẩm/chain + tier cần, sơ đồ puzzle mỗi màn — viết GAME_DESIGN_ACTS.md §15, thiết kế mới 10 chain còn thiếu (Nước mắm, Sủi cảo, Sushi, Kim chi, Trang phục, Nón, Giày dép, Cà phê, Trà sữa) với đủ bảng 5 màn/chương (objectives, vật cản toạ độ, moveLimit ước lượng), cộng 3 artboard 'sơ đồ puzzle' trực quan vào Artifact đã publish",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §15 vào docs/GAME_DESIGN_ACTS.md (§15.0 bảng tổng quan 5 Hồi = 16 chương/~78 màn, §15.2-15.5 bảng chi tiết 10 chương mới). Nguyên tắc chốt: KHÔNG Hồi nào cần vật cản mới ngoài Hư hao (§13) — 4 Hồi 2-5 tái dùng đủ 5 loại đã có, chỉ đổi flavor theo chủ đề (vd Cỏ dại→'mốc lên men' cho Kim chi, Hư hao→'hạt cà phê mốc' cho Cà phê, khớp thẳng câu hỏi mở §9.8). Thêm 3 artboard mới vào artifact TS7UtfeeZt5tkpV9LbHpjL (SoDoVuonDua/SoDoBunCha/SoDoKimChi — sơ đồ puzzle vẽ grid thật với toạ độ vật cản, riêng Hư hao vẽ minh hoạ vòng đời leo thang thay vì toạ độ cố định vì bản chất là vật cản sinh theo thời gian). Publish canvas.json bị 1 lần conflict do server tự chuẩn hoá file sau lần publish trước — đã đọc lại bản mới nhất và merge đúng cách trước khi publish lại. CHƯA commit (user chưa yêu cầu commit lượt này), CHƯA chạy sim cho toàn bộ số liệu mới."
+    },
+    {
+      "id": "game-design-22",
+      "title": "User phản hồi §15/§16-cũ 'quá ít nội dung' — hỏi lại qua AskUserQuestion, user chọn cả 3 hướng (nhiều chương/Hồi + nhiều màn/chương + nhiều Hồi từ v1.0). Viết GAME_DESIGN_ACTS.md §16: chuẩn mới 9 màn/chương (giải thích rõ 5 màn/chương KHÔNG phải giới hạn kỹ thuật, chỉ là quy ước — ChapterDef.levelIds độ dài tuỳ ý), mở rộng 5 Hồi cũ thêm chương (Hồi1 2→4, Hồi2 6→10, Hồi3 3→7, Hồi4 3→5, Hồi5 2→5), thêm Hồi 6 Tiệm bánh/Hồi 7 Quà&hoa/Hồi 8 Homestay (khép vòng về nông trại Hồi 1) — tổng 8 Hồi/43 chương/~381 màn. Cập nhật artboard 'Cấu trúc & Flow' trong artifact lên 8 Hồi",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §16 (16.0-16.6) vào docs/GAME_DESIGN_ACTS.md. Trung thực về backlog: chỉ có KHUNG tên chương cho phần mở rộng (§16.2/§16.3), CHƯA có bảng màn chi tiết (objective/vật cản/moveLimit) — chỉ làm 1 ví dụ đầy đủ theo chuẩn 9 màn (Cà phê mở rộng, §16.4, thêm 1 tier 'Rang kỹ hai lần' để đủ 6 tier ramp 9 màn) để chứng minh công thức tổng quát dùng được, còn lại 42 chương khác phải làm sau theo cùng khuôn. Món mới ở Hồi 2 lấy thẳng từ kho đã nghiên cứu ở GAME_DESIGN.md §2.1b (Bún bò Huế, Mì Quảng đã là di sản quốc gia thật), không cần nghiên cứu lại. Đã update artboard CauTrucFlow.dc.html trong artifact TS7UtfeeZt5tkpV9LbHpjL lên 8 Hồi (đổi width 1640→1980, phải dời lại vị trí board Hoi.dc.html kế bên để không đè lên nhau). CHƯA commit, CHƯA sim — với quy mô ~381 màn, sim không còn là 'nên có' mà là bắt buộc trước khi code bất kỳ số liệu nào."
+    },
+    {
+      "id": "game-design-23",
+      "title": "Chi tiết hoá Hồi 1 + Hồi 2 mở rộng theo chuẩn 9 màn/chương (§16.1): 6 chương mới (Bò sữa, Vườn rau củ, Bún bò Huế, Mì Quảng, Bánh xèo, Chè) — đủ chain/tier + bảng 9 màn/chương (objectives, vật cản toạ độ, moveLimit) + 1 khuôn toạ độ puzzle dùng chung cho cả 6 chương, viết GAME_DESIGN_ACTS.md §17",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §17 (17.0-17.3) vào docs/GAME_DESIGN_ACTS.md. Hồi 1 (4/4 chương) và Hồi 2 (10/10 chương) giờ ĐÃ XONG HẲN ở chuẩn mới — bảng tiến độ ở §17.3 cho thấy còn 21/43 chương (Hồi 3-8). Chủ động chọn Vườn rau củ KHÔNG có vật cản (màn nghỉ, tránh mọi chương đều ramp vật cản gây nhàm) — quyết định thiết kế tự đưa ra, chưa hỏi user. 4 chương Hồi2 mới dùng chung đúng 1 bảng màn (chỉ đổi cột vật cản theo từng chương) để tránh lặp lại y hệt 4 lần. CHƯA cập nhật artifact cho §17 (vẫn giữ 8 artboard cũ). CHƯA commit, CHƯA sim."
+    },
+    {
+      "id": "game-design-24",
+      "title": "User: 'tôi cần toàn bộ chi tiết trong artifact' — thêm 4 artboard mới vào Artifact TS7UtfeeZt5tkpV9LbHpjL render TOÀN BỘ bảng chain/tier + màn/objective/vật cản/moveLimit của 14 chương Hồi 1-2 đã xong (§14/§11/§15.2/§17) dưới dạng bảng HTML thật (không phải tóm tắt), cộng 8 chương đã có của Hồi 3-5 + đánh dấu rõ phần còn thiếu (21 chương)",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "4 artboard mới: ChiTietHoi1 (4 chương Hồi1, panel 2x2), ChiTietHoi2A+ChiTietHoi2B (10 chương Hồi2, tách 2 board vì quá dài — 2B gộp 4 chương dùng chung 1 bảng thay vì lặp 4 lần y hệt), ChiTietHoi345 (8 chương đã có của Hồi3-5 theo hàng + ô '···' đánh dấu rõ chương còn thiếu, không giả vờ đã xong). Dữ liệu Chương 1 'Trại gà nhỏ' và Chương 5 'Tô phở bò' (đã live) lấy đúng từ flutter/lib/data/levels.dart đã đọc từ đầu phiên, không bịa. Artifact giờ có đủ 12 artboard. Phải đọc lại canvas.json trước khi publish (đã học từ lần conflict trước) — không bị lỗi lần này. CHƯA commit."
     },
     {
       "id": "flutter-app-10",
@@ -122,6 +160,27 @@
       "domain": "flutter-app",
       "status": "done",
       "evidence": "flutter analyze sạch, 59 test pass (thêm 1 test mới cho luồng pushReplacement nhiều màn rồi popUntil về Home trong widget_test.dart — test này PASS trên cả code cũ lẫn code mới, tức chưa tự chứng minh được đây là root cause chính xác của bug lock, chỉ xác nhận RouteObserver là cách làm đúng/an toàn theo chuẩn Flutter). flutter build macos --debug thành công. CHƯA commit (đợi user duyệt). CHƯA verify bằng mắt trên điện thoại thật — cần user tự flutter run và xác nhận lại đúng 6 điểm, đặc biệt bug lock vì cơ chế gốc chưa chắc chắn 100%."
+    },
+    {
+      "id": "game-design-26",
+      "title": "Mở rộng Hồi 1 (\"quá mỏng\" theo user) thành 22 chương/~185 màn: thêm 7 chain trái cây/ngũ cốc (táo/dưa hấu/thanh long/xoài/thơm/lúa/ngô), 4 chương mứt nối chuỗi qua initialTiles, 2 chain vật nuôi mới (heo/gà thịt), mission \"chó giữ trại\" dùng bàn nhiễu 3-chain (guardDog/cat/mouse, chỉ 1 chain tính objective), và 4 chương \"Phiên chợ\" combo nhiều chain trên bàn 7x7/8x8",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §18 vào docs/GAME_DESIGN_ACTS.md (18.0-18.6): danh sách 18 chương mới, mẫu bảng màn đầy đủ cho Mứt táo (§18.2), Chó giữ trại (§18.3, bàn nhiễu), Phiên chợ I (§18.4, bàn lớn) — 13/18 chương mới còn ở dạng cấu trúc (backlog §18.6, cần viết bảng 9 màn). Lưu ý kỹ thuật quan trọng: cần kiểm tra/mở rộng LevelConfig để hỗ trợ nhiều chain/màn trước khi code bất kỳ màn nào ở §18.3/§18.4 — CHƯA commit."
+    },
+    {
+      "id": "game-design-27",
+      "title": "Thiết kế đầy đủ NPC + script (thoại) + board (sơ đồ puzzle) cho Hồi 1 sau khi mở rộng thành 22 chương (§18)",
+      "domain": "game-design",
+      "status": "done",
+      "evidence": "Thêm §19 vào docs/GAME_DESIGN_ACTS.md: mở rộng từ 1 NPC (Ông Tư) thành 4 NPC trong Hồi 1 (Ông Tư/Chú Bảy/Bé Na/Dì Sáu, mỗi người phụ trách 1 cụm chương), 6 cảnh script đầy đủ (mở đầu Hồi 1, giới thiệu từng NPC, mission Chó giữ trại đầy đủ 3 mốc, kết Hồi 1 dẫn sang Hồi 2) + bảng thoại ngắn cho 15 chương còn lại, + 3 board sơ đồ puzzle (Mứt táo/Chó giữ trại/Phiên chợ I) dạng lưới text theo khuôn §17.0. Đã cập nhật artifact web (https://claude.ai/artifact/FDAoYUEP6Fhefub9LHjYTb) với NPC cards + script accordion + board diagrams cho Hồi 1. CHƯA commit."
+    },
+    {
+      "id": "flutter-app-1",
+      "title": "Cài đặt Hồi 1 (bản gốc, 4 chương) trong Flutter theo docs/GAME_DESIGN_ACTS.md §14/§17.1/§19: engine vật cản Hư hao, engine thoại NPC, 3 chương mới (Vườn dừa/Bò sữa/Vườn rau củ)",
+      "domain": "flutter-app",
+      "status": "done",
+      "evidence": "Kế hoạch duyệt qua EnterPlanMode, lưu tại .claude/plans/functional-floating-crescent.md. Engine mới: ObstacleCell/DecaySpawnConfig + 4 GameEvent (types.dart), Board.obstacles map + slide() cắt đoạn quanh vật cản (board.dart), GameSession._applyObstacleHits/_decayTick/repairAnyHeavy (game_session.dart), ObstacleComponent + GridComponent sync (game/), booster \"Bộ Sửa Chữa\" (farm_merge_game.dart, theo đúng pattern undo/shuffle có sẵn). Engine thoại: SceneDef/DialogueLine (data/scenes.dart, nội dung nguyên văn §19), ChapterDef.introSceneId, SaveData.seenScenes + SaveManager.hasSeenScene/markSceneSeen, SceneDialog widget, wiring vào game_screen.dart._showIntro. Nội dung: 3 ChainDef mới (coconut 8 tier, dairyCow 6 tier, vegetable 6 tier — chains.dart), 19 LevelConfig mới (2c-1..5, 2d-1..9, 2v-1..9 — levels.dart, đúng bảng §14.2/§17.1), 3 ChapterDef mới chèn giữa ch1 và ch2 (chapters.dart) — đổi thứ tự unlock có chủ đích: ch2 \"Tô phở bò\" giờ chỉ mở sau khi xong cả 3 chương Hồi 1 mới, không còn mở ngay sau ch1. Test: flutter analyze sạch, flutter test 91/91 pass — sửa 2 test cũ theo hành vi mới có chủ đích (save_manager_test.dart unlock order, widget_test.dart phải dismiss SceneDialog trước LevelIntroDialog), thêm test/core/obstacle_test.dart (5 test: hit-to-clear, slide chặn theo đoạn, decay tick spawn/escalate, repairAnyHeavy) + 1 test seenScenes roundtrip trong save_manager_test.dart. CHƯA commit. CHƯA chạy flutter run thực tế (theo dont_do: không dùng cliclick/screencapture tự lái app) — đề nghị user tự kiểm tra cảm giác chơi, đặc biệt giả định \"1 hit/lượt vuốt\" ở _applyObstacleHits. KHÔNG làm trong lượt này (backlog): 18 chương Hồi 1 v2 (§18: trái cây/mứt/heo/chó giữ trại/phiên chợ) vì cần thêm engine nhiều-chain-1-bàn; Đá/Cỏ dại/Băng/Lưới đánh cá (3 vật cản còn lại) dùng chung khung ObstacleCell vừa xây khi tới lượt."
     }
   ],
   "open_questions": [
